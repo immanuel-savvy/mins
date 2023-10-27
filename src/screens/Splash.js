@@ -1,9 +1,8 @@
 import React from 'react';
 import {StatusBar} from 'react-native';
-import {hp, wp} from '../utils/dimensions';
-import Fr_text from '../components/fr_text';
 import Bg_view from '../components/bg_view';
 import Icon from '../components/icon';
+import {hp, wp} from '../utils/dimensions';
 
 class Splash extends React.Component {
   constructor(props) {
@@ -13,14 +12,17 @@ class Splash extends React.Component {
   render = () => {
     return (
       <Bg_view
-        style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#006dbb',
+        }}>
         <StatusBar hidden />
-        {/* <Icon
-          icon={require('../assets/Icons/udara_logo.png')}
-          style={{height: hp(10), width: wp(50)}}
-        /> */}
-
-        <Fr_text>MINS</Fr_text>
+        <Icon
+          icon={require('../assets/icons/logo_mins.png')}
+          style={{height: hp(25), width: wp(50)}}
+        />
       </Bg_view>
     );
   };
