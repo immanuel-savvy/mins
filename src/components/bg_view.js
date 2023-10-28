@@ -24,7 +24,7 @@ class Bg_view extends React.Component {
       style.shadowColor = '#000';
       style.elevation = 5;
     }
-    if (flex) style.flex = 1;
+    if (flex) style.flex = typeof flex === 'boolean' ? 1 : flex;
     if (accent) style.backgroundColor = '#FF6905';
     if (horizontal) {
       style.flexDirection = 'row';
