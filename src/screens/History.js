@@ -1,6 +1,11 @@
 import React from 'react';
 import Bg_view from '../components/bg_view';
-import {ScrollView, TouchableNativeFeedback, View} from 'react-native';
+import {
+  ScrollView,
+  StatusBar,
+  TouchableNativeFeedback,
+  View,
+} from 'react-native';
 import Icon from '../components/icon';
 import {hp, wp} from '../utils/dimensions';
 import Fr_text from '../components/fr_text';
@@ -27,6 +32,7 @@ class History extends React.Component {
         style={{
           backgroundColor: '#006dbb',
         }}>
+        <StatusBar barStyle="light-content" backgroundColor="#006dbb" />
         <ScrollView
           contentContainerStyle={{flex: 1}}
           showVerticalScrollIndicator={false}>

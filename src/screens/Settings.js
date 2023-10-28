@@ -1,7 +1,7 @@
 import React from 'react';
 import Bg_view from '../components/bg_view';
 import Fr_text from '../components/fr_text';
-import {ScrollView, TouchableOpacity, View} from 'react-native';
+import {ScrollView, StatusBar, TouchableOpacity, View} from 'react-native';
 import Icon from '../components/icon';
 import {hp, wp} from '../utils/dimensions';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -25,6 +25,7 @@ class Settings extends React.Component {
         style={{
           backgroundColor: '#006dbb',
         }}>
+        <StatusBar barStyle="light-content" backgroundColor="#006dbb" />
         <ScrollView
           contentContainerStyle={{flex: 1}}
           showVerticalScrollIndicator={false}>

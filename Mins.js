@@ -42,6 +42,8 @@ class Index extends React.Component {
           headerShown: false,
           tabBarActiveTintColor: '#006dbb',
           tabBarInactiveTintColor: '#858597',
+          tabBarInactiveBackgroundColor: '#fff',
+          tabBarActiveBackgroundColor: '#eee',
           tabBarStyle: {
             height: hp(9),
             justifyContent: 'center',
@@ -139,7 +141,7 @@ class Mins extends React.Component {
   componentDidMount = async () => {
     setTimeout(() => {
       this.setState({loading: false});
-    }, 2500);
+    }, 2000);
   };
 
   componentWillUnmount = () => {};
@@ -149,7 +151,7 @@ class Mins extends React.Component {
 
     return (
       <NavigationContainer>
-        <View
+        <SafeAreaView
           collapsable={false}
           style={{flex: 1}}
           // {...this._pan_responder.panHandlers}
@@ -161,7 +163,7 @@ class Mins extends React.Component {
               <App_stack_entry />
             </SafeAreaView>
           )}
-        </View>
+        </SafeAreaView>
       </NavigationContainer>
     );
   };

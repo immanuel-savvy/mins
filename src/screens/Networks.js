@@ -3,7 +3,7 @@ import Bg_view from '../components/bg_view';
 import Fr_text from '../components/fr_text';
 import Icon from '../components/icon';
 import {hp, wp} from '../utils/dimensions';
-import {ScrollView} from 'react-native';
+import {ScrollView, StatusBar} from 'react-native';
 
 class Networks extends React.Component {
   constructor(props) {
@@ -27,6 +27,7 @@ class Networks extends React.Component {
         style={{
           backgroundColor: '#006dbb',
         }}>
+        <StatusBar barStyle="light-content" backgroundColor="#006dbb" />
         <ScrollView showVerticalScrollIndicator={false}>
           <Bg_view style={{alignItems: 'center'}} no_bg>
             <Icon
