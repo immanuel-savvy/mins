@@ -2,7 +2,8 @@ import React from 'react';
 import Bg_view from '../components/bg_view';
 import Fr_text from '../components/fr_text';
 import Icon from '../components/icon';
-import {wp} from '../utils/dimensions';
+import {hp, wp} from '../utils/dimensions';
+import {ScrollView} from 'react-native';
 
 class Networks extends React.Component {
   constructor(props) {
@@ -11,6 +12,14 @@ class Networks extends React.Component {
     this.state = {};
   }
 
+  networks = [
+    ['Operator', 'Download (Mbps)', 'Upload (Mbps)', 'Latency (ms)'],
+    ['9mobile', '12.32', '3.95', '54'],
+    ['Airtel', '6.99', '2.46', '55'],
+    ['Glo', '7.35', '3.65', '65'],
+    ['MTN', '7.97', '4.41', '45'],
+  ];
+
   render() {
     return (
       <Bg_view
@@ -18,72 +27,57 @@ class Networks extends React.Component {
         style={{
           backgroundColor: '#006dbb',
         }}>
-        <Bg_view
-          no_bg
-          horizontal
-          no_centralise
-          style={{
-            justifyContent: 'space-between',
-            padding: 20,
-            borderBottomColor: '#fff',
-            borderBottomWidth: 2,
-          }}>
-          <Bg_view no_bg horizontal>
+        <ScrollView showVerticalScrollIndicator={false}>
+          <Bg_view style={{alignItems: 'center'}} no_bg>
             <Icon
-              icon={require('./../assets/icons/antenna.jpeg')}
-              style={{height: wp(15), width: wp(15)}}
+              icon={require('./../assets/icons/logo_mins.png')}
+              style={{height: wp(25), width: wp(25)}}
             />
-
-            <Bg_view no_bg style={{marginLeft: 10}}>
-              <Fr_text style={{color: '#fff', fontSize: 18}} bold>
-                Data SIM
-              </Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>4G</Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>9 mobile</Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>
-                Location: Surulere
-              </Fr_text>
-            </Bg_view>
           </Bg_view>
-          <Bg_view no_bg style={{marginRight: 20}}>
-            <Fr_text style={{color: '#fff', fontSize: 18}} bold>
-              Connection
+
+          <Bg_view no_bg style={{padding: wp(4)}}>
+            <Fr_text bold style={{fontSize: wp(7.5)}} color="#fff">
+              Network Stats
             </Fr_text>
-            <Fr_text style={{color: '#fff', fontSize: 18}}>Mobile data</Fr_text>
-          </Bg_view>
-        </Bg_view>
-        <Bg_view flex no_bg style={{paddingVertical: 40}}>
-          <Bg_view horizontal no_bg style={{justifyContent: 'space-around'}}>
-            <Bg_view no_bg>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Download</Fr_text>
-              <Fr_text style={{color: '#fc3', fontSize: 30}} bold>
-                5.04
-              </Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Mbps</Fr_text>
-            </Bg_view>
-            <Bg_view no_bg>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Upload</Fr_text>
-              <Fr_text style={{color: '#fc3', fontSize: 30}} bold>
-                9.33
-              </Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Mbps</Fr_text>
-            </Bg_view>
-            <Bg_view no_bg>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Latency</Fr_text>
-              <Fr_text style={{color: '#fc3', fontSize: 30}} bold>
-                45
-              </Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>ms</Fr_text>
-            </Bg_view>
+            <Fr_text color="#fff">
+              The average speeds users experienced in this area.
+            </Fr_text>
           </Bg_view>
 
-          <Bg_view style={{alignSelf: 'center'}} no_bg>
-            <Icon
-              icon={require('./../assets/icons/meter.gif')}
-              style={{height: wp(80), width: wp(80)}}
-            />
+          <Bg_view
+            style={{margin: wp(4), paddingTop: wp(2.8), borderRadius: wp(2.8)}}>
+            {this.networks.map((net, j) => {
+              return (
+                <Bg_view
+                  horizontal
+                  no_bg
+                  key={j}
+                  style={{
+                    borderBottomWidth: 4,
+                    borderBottomColor: '#006dbb',
+                    paddingVertical: hp(1.4),
+                    paddingHorizontal: wp(2.8),
+                    minHeight: hp(10),
+                  }}>
+                  {net.map((n, i) => (
+                    <Bg_view no_bg key={i} flex style={{alignItems: 'center'}}>
+                      <Fr_text bold={!j} size={wp(j ? 4.5 : 4)}>
+                        {n}
+                      </Fr_text>
+                    </Bg_view>
+                  ))}
+                </Bg_view>
+              );
+            })}
           </Bg_view>
-        </Bg_view>
+
+          <Fr_text style={{margin: wp(4), color: '#fff'}}>
+            Location:{' '}
+            <Fr_text bold color="#fff">
+              Surulere
+            </Fr_text>
+          </Fr_text>
+        </ScrollView>
       </Bg_view>
     );
   }
