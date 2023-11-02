@@ -1,7 +1,6 @@
 import React from 'react';
 import Bg_view from '../components/bg_view';
 import Fr_text from '../components/fr_text';
-import Icon from '../components/icon';
 import {hp, wp} from '../utils/dimensions';
 import {
   SafeAreaView,
@@ -10,7 +9,6 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Speed_header from '../components/speed_header';
 import Speed_stats from '../components/speed_stats';
 
@@ -21,8 +19,10 @@ class Speed extends React.Component {
     this.state = {};
   }
 
+  componentDidMount = async () => {};
+
   start = () => {
-    this.setState({started: true, did_start: true}, this.stats.begin_measure);
+    this.setState({started: true, did_start: true});
   };
 
   done = () => {
@@ -30,7 +30,7 @@ class Speed extends React.Component {
   };
 
   render() {
-    let {started, did_start} = this.state;
+    let {did_start} = this.state;
 
     return (
       <Bg_view
@@ -60,41 +60,7 @@ class Speed extends React.Component {
               )}
             </Bg_view>
 
-            <Speed_stats
-              ref={stats => (this.stats = stats)}
-              done={this.done}
-              started={started}
-            />
-            {started ? null : (
-              <Bg_view
-                flex
-                no_bg
-                style={{justifyContent: 'center', alignItems: 'center'}}>
-                <TouchableWithoutFeedback
-                  style={{height: wp(50), width: wp(50), borderRadius: wp(50)}}
-                  onPress={this.start}>
-                  <View>
-                    <Bg_view
-                      shadowed
-                      style={{
-                        height: wp(45),
-                        width: wp(45),
-                        borderRadius: wp(45),
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        elevation: 10,
-                        shadowColor: '#000',
-                        backgroundColor: '#efffdf',
-                      }}>
-                      <Fr_text
-                        style={{textTransform: 'uppercase', fontSize: wp(9)}}>
-                        start
-                      </Fr_text>
-                    </Bg_view>
-                  </View>
-                </TouchableWithoutFeedback>
-              </Bg_view>
-            )}
+            <Speed_stats done={this.done} start={this.start} />
           </ScrollView>
         </SafeAreaView>
       </Bg_view>

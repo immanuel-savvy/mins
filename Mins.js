@@ -5,6 +5,8 @@ import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {SafeAreaView, View} from 'react-native';
 import Emitter from 'semitter';
+import NetInfo from '@react-native-community/netinfo';
+import Geolocation from '@react-native-community/geolocation';
 //
 import Splash from './src/screens/Splash';
 import {hp, wp} from './src/utils/dimensions';
@@ -13,6 +15,7 @@ import Networks from './src/screens/Networks';
 import History from './src/screens/History';
 import Settings from './src/screens/Settings';
 import Icon from './src/components/icon';
+import {App_data} from './Contexts';
 
 const emitter = new Emitter();
 
@@ -139,29 +142,57 @@ class Mins extends React.Component {
   }
 
   componentDidMount = async () => {
-    setTimeout(() => {
-      this.setState({loading: false});
-    }, 2000);
+    let netinfo = await NetInfo.fetch();
+    this.setState({netinfo});
+
+    let get_one_time_location = () => {
+      Geolocation.getCurrentPosition(
+        position => {
+          console.log(JSON.stringify(position, null, 2));
+
+          fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`,
+          )
+            .then(data => data.json())
+            .then(res => {
+              this.setState({location: res, loading: false});
+            })
+            .catch(err => {
+              console.log(err.message);
+              this.setState({loading: false});
+            });
+        },
+        error => {
+          console.log(error.message);
+          this.setState({loading: false});
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 30000,
+          maximumAge: 1000,
+        },
+      );
+    };
+
+    get_one_time_location();
   };
 
   componentWillUnmount = () => {};
 
   render = () => {
-    let {loading} = this.state;
+    let {loading, netinfo, location} = this.state;
 
     return (
       <NavigationContainer>
-        <SafeAreaView
-          collapsable={false}
-          style={{flex: 1}}
-          // {...this._pan_responder.panHandlers}
-        >
+        <SafeAreaView collapsable={false} style={{flex: 1}}>
           {loading ? (
             <Splash />
           ) : (
-            <SafeAreaView style={{flex: 1}}>
-              <App_stack_entry />
-            </SafeAreaView>
+            <App_data.Provider value={{netinfo, location}}>
+              <SafeAreaView style={{flex: 1}}>
+                <App_stack_entry />
+              </SafeAreaView>
+            </App_data.Provider>
           )}
         </SafeAreaView>
       </NavigationContainer>
