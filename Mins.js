@@ -16,6 +16,7 @@ import History from './src/screens/History';
 import Settings from './src/screens/Settings';
 import Icon from './src/components/icon';
 import {App_data} from './Contexts';
+import toast from './src/utils/toast';
 
 const emitter = new Emitter();
 
@@ -158,6 +159,7 @@ class Mins extends React.Component {
               this.setState({location: res, loading: false});
             })
             .catch(err => {
+              toast("Couldn't get location details");
               console.log(err.message);
               this.setState({loading: false});
             });
@@ -173,6 +175,10 @@ class Mins extends React.Component {
         },
       );
     };
+
+    setTimeout(() => {
+      this.setState({loading: false});
+    }, 2500);
 
     get_one_time_location();
   };
