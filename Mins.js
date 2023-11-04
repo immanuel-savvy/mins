@@ -7,6 +7,7 @@ import {SafeAreaView, View} from 'react-native';
 import Emitter from 'semitter';
 import NetInfo from '@react-native-community/netinfo';
 import Geolocation from '@react-native-community/geolocation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 //
 import Splash from './src/screens/Splash';
 import {hp, wp} from './src/utils/dimensions';
@@ -15,7 +16,7 @@ import Networks from './src/screens/Networks';
 import History from './src/screens/History';
 import Settings from './src/screens/Settings';
 import Icon from './src/components/icon';
-import {App_data} from './Contexts';
+import {App_data, Test_history} from './Contexts';
 import toast from './src/utils/toast';
 
 const emitter = new Emitter();
@@ -156,7 +157,19 @@ class Mins extends React.Component {
           )
             .then(data => data.json())
             .then(res => {
-              this.setState({location: res, loading: false});
+              console.log(res);
+              this.setState({
+                location: res,
+                location_info: {
+                  ...position.coords,
+                  continent: res.continent,
+                  countryCode: res.countryCode,
+                  countryName: res.countryName,
+                  city: res.city,
+                  locality: res.locality,
+                },
+                loading: false,
+              });
             })
             .catch(err => {
               toast("Couldn't get location details");
@@ -181,12 +194,54 @@ class Mins extends React.Component {
     }, 2500);
 
     get_one_time_location();
+
+    this.fetch_history = async () => {
+      this.setState({history: await this.load_history()});
+    };
+
+    this.clear_history = async () => {
+      this.setState({history: new Array()});
+      await AsyncStorage.removeItem('history');
+    };
+
+    this.new_test = async test => {
+      let {history, netinfo, location_info} = this.state;
+      if (!history) history = await this.load_history();
+
+      test.timestamp = Date.now();
+      test.netinfo = netinfo;
+      test.location = location_info;
+
+      history.unshift(test);
+      this.setState({history}, this.persist_history);
+    };
+
+    emitter.listen('fetch_history', this.fetch_history);
+    emitter.listen('new_test', this.new_test);
+    emitter.listen('clear_history', this.clear_history);
   };
 
-  componentWillUnmount = () => {};
+  componentWillUnmount = () => {
+    emitter.remove_listener('fetch_history', this.fetch_history);
+    emitter.remove_listener('clear_history', this.clear_history);
+    emitter.remove_listener('new_test', this.new_test);
+  };
+
+  persist_history = async () => {
+    let {history} = this.state;
+    await AsyncStorage.setItem('history', JSON.stringify(history));
+  };
+
+  load_history = async () => {
+    let history = await AsyncStorage.getItem('history');
+    if (history) history = JSON.parse(history);
+    else history = new Array();
+
+    return history;
+  };
 
   render = () => {
-    let {loading, netinfo, location} = this.state;
+    let {loading, netinfo, history, location} = this.state;
 
     return (
       <NavigationContainer>
@@ -195,9 +250,11 @@ class Mins extends React.Component {
             <Splash />
           ) : (
             <App_data.Provider value={{netinfo, location}}>
-              <SafeAreaView style={{flex: 1}}>
-                <App_stack_entry />
-              </SafeAreaView>
+              <Test_history.Provider value={{history}}>
+                <SafeAreaView style={{flex: 1}}>
+                  <App_stack_entry />
+                </SafeAreaView>
+              </Test_history.Provider>
             </App_data.Provider>
           )}
         </SafeAreaView>

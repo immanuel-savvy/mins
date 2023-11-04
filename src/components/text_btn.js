@@ -15,6 +15,7 @@ const Text_btn = ({
   style,
   accent,
   italic,
+  color,
   long_action,
   icon,
 }) => (
@@ -34,6 +35,7 @@ const Text_btn = ({
         centralise={centralise}
         accent={accent}
         size={size}
+        color={color}
         capitalise={capitalise}
         italic={italic}
         bold={bold}>

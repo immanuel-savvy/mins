@@ -7,6 +7,7 @@ import RNSpeedometer from 'react-native-speedometer';
 import {CountUp} from 'use-count-up';
 import Text_btn from './text_btn';
 import {TouchableWithoutFeedback, View} from 'react-native';
+import {emitter} from '../../Mins';
 
 class Speed_stats extends React.Component {
   constructor(props) {
@@ -18,16 +19,20 @@ class Speed_stats extends React.Component {
   }
 
   begin_measure = () => {
-    let {done} = this.props;
+    this.previous_stats = this.state.traffic_stats
+      ? {...this.state.traffic_stats}
+      : null;
     this.setState(
       {did_start: true, starting: true, traffic_stats: null},
       async () => {
-        const {
+        const value = await Ping.getTrafficStats();
+
+        let {
           receivedNetworkSpeed,
           sendNetworkSpeed,
           receivedNetworkTotal,
           sendNetworkTotal,
-        } = await Ping.getTrafficStats();
+        } = value;
 
         let traffic_stats = {
           receivedNetworkSpeed: Number(receivedNetworkSpeed.slice(0, -3)),
@@ -35,10 +40,28 @@ class Speed_stats extends React.Component {
           receivedNetworkTotal: Number(receivedNetworkTotal.slice(0, -2)),
           sendNetworkTotal: Number(sendNetworkTotal.slice(0, -2)),
         };
-        this.setState({
-          traffic_stats,
-          starting: false,
-        });
+        if (
+          !traffic_stats.receivedNetworkSpeed ||
+          !traffic_stats.sendNetworkSpeed ||
+          !traffic_stats.receivedNetworkTotal ||
+          !traffic_stats.sendNetworkTotal
+        ) {
+          if (!this.previous_stats) return this.begin_measure();
+          else traffic_stats = this.previous_stats;
+        } else this.previous_stats = traffic_stats;
+
+        traffic_stats.latency = parseInt(
+          traffic_stats.receivedNetworkTotal /
+            this.bpsToMbps(traffic_stats.receivedNetworkSpeed),
+        );
+
+        this.setState(
+          {
+            traffic_stats,
+            starting: false,
+          },
+          () => emitter.emit('new_test', traffic_stats),
+        );
       },
     );
   };
@@ -99,16 +122,7 @@ class Speed_stats extends React.Component {
                 {traffic_stats ? (
                   <CountUp
                     isCounting={!!traffic_stats}
-                    end={
-                      traffic_stats
-                        ? parseInt(
-                            traffic_stats.receivedNetworkTotal /
-                              this.bpsToMbps(
-                                traffic_stats.receivedNetworkSpeed,
-                              ),
-                          )
-                        : 0
-                    }
+                    end={traffic_stats?.latency || 0}
                     duration={3.2}
                   />
                 ) : (

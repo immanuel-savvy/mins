@@ -179,12 +179,64 @@ const to_title = string => {
   return str.trim();
 };
 
+const flatten_object = obj => {
+  const result = [];
+
+  function recurse(current, prop) {
+    if (Object(current) !== current) {
+      result[prop] = current;
+    } else if (Array.isArray(current)) {
+      for (let i = 0; i < current.length; i++) {
+        recurse(current[i], `${prop}[${i}]`);
+      }
+      if (current.length === 0) {
+        result[prop] = [];
+      }
+    } else {
+      let isEmpty = true;
+      for (const p in current) {
+        isEmpty = false;
+        recurse(current[p], prop ? `${prop}.${p}` : p);
+      }
+      if (isEmpty && prop) {
+        result[prop] = {};
+      }
+    }
+  }
+
+  recurse(obj, '');
+  return Object.entries(result);
+};
+
+const camel_case_to_human_case = camel_case_str => {
+  // Split the camelCase string into words
+  let words = camel_case_str
+    .replace(/([a-z])([A-Z])/g, '$1 $2') // Insert space before capital letters
+    .split(' ');
+
+  // Capitalize the first letter of each word and join them with spaces
+  let human_case_str = words
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+
+  return human_case_str;
+};
+
+const bps_to_mbps = bps => {
+  if (!bps) return;
+
+  let mbps = bps / 100;
+  return mbps;
+};
+
 export {
+  bps_to_mbps,
   zero_padd_figure,
   format_date,
   format_time,
   phone_regex,
   email_regex,
+  camel_case_to_human_case,
   sentence,
   capitalise,
   validate_email,
@@ -196,4 +248,5 @@ export {
   month_index,
   time_string,
   to_title,
+  flatten_object,
 };

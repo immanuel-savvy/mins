@@ -2,4 +2,6 @@ import React from 'react';
 
 const App_data = React.createContext();
 
-export {App_data};
+const Test_history = React.createContext();
+
+export {App_data, Test_history};
