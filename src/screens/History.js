@@ -60,80 +60,78 @@ class History extends React.Component {
                 backgroundColor: '#006dbb',
               }}>
               <StatusBar barStyle="light-content" backgroundColor="#006dbb" />
-              <ScrollView
-                contentContainerStyle={{flex: 1}}
-                showVerticalScrollIndicator={false}>
-                <Bg_view no_bg>
-                  <Bg_view
-                    horizontal
-                    no_bg
-                    style={{
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-end',
-                      paddingHorizontal: wp(4),
-                    }}>
-                    <View style={{flex: 1}} />
-                    <View style={{flex: 1, alignItems: 'center'}}>
-                      <Icon
-                        icon={require('./../assets/icons/logo_mins.png')}
-                        style={{height: wp(25), width: wp(25)}}
-                      />
-                    </View>
-                    <View
-                      style={{
-                        flex: 1,
-                        alignItems: 'flex-end',
-                        justifyContent: 'flex-end',
-                      }}>
-                      <Text_btn
-                        text="Clear history"
-                        color="#eee"
-                        action={this.clear}
-                        bold
-                      />
-                    </View>
-                  </Bg_view>
-                </Bg_view>
-
+              <Bg_view no_bg>
                 <Bg_view
-                  flex
+                  horizontal
                   no_bg
                   style={{
-                    margin: wp(4),
-                    paddingTop: wp(2.8),
-                    borderRadius: wp(2.8),
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-end',
+                    paddingHorizontal: wp(4),
                   }}>
-                  <Bg_view
-                    horizontal
-                    no_bg
+                  <View style={{flex: 1}} />
+                  <View style={{flex: 1, alignItems: 'center'}}>
+                    <Icon
+                      icon={require('./../assets/icons/logo_mins.png')}
+                      style={{height: wp(25), width: wp(25)}}
+                    />
+                  </View>
+                  <View
                     style={{
-                      borderBottomWidth: 4,
-                      borderBottomColor: '#006dbb',
-                      paddingHorizontal: wp(2.8),
-                      minHeight: hp(5),
+                      flex: 1,
+                      alignItems: 'flex-end',
+                      justifyContent: 'flex-end',
                     }}>
-                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                      <Fr_text bold color="#fff" size={wp(4)}>
-                        Type
-                      </Fr_text>
-                    </Bg_view>
-                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                      <Fr_text bold color="#fff" size={wp(4)}>
-                        Date
-                      </Fr_text>
-                    </Bg_view>
-                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                      <Fr_text bold color="#fff" size={wp(4)}>
-                        Latency
-                      </Fr_text>
-                    </Bg_view>
-                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                      <Feather name="download" color="#fff" size={wp(5)} />
-                    </Bg_view>
-                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                      <Feather name="upload" color="#fff" size={wp(5)} />
-                    </Bg_view>
+                    <Text_btn
+                      text="Clear history"
+                      color="#eee"
+                      action={this.clear}
+                      bold
+                    />
+                  </View>
+                </Bg_view>
+              </Bg_view>
+
+              <Bg_view
+                flex
+                no_bg
+                style={{
+                  margin: wp(4),
+                  paddingTop: wp(2.8),
+                  borderRadius: wp(2.8),
+                }}>
+                <Bg_view
+                  horizontal
+                  no_bg
+                  style={{
+                    borderBottomWidth: 4,
+                    borderBottomColor: '#006dbb',
+                    paddingHorizontal: wp(2.8),
+                    minHeight: hp(5),
+                  }}>
+                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                    <Fr_text bold color="#fff" size={wp(4)}>
+                      Type
+                    </Fr_text>
                   </Bg_view>
+                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                    <Fr_text bold color="#fff" size={wp(4)}>
+                      Date
+                    </Fr_text>
+                  </Bg_view>
+                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                    <Fr_text bold color="#fff" size={wp(4)}>
+                      Latency
+                    </Fr_text>
+                  </Bg_view>
+                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                    <Feather name="download" color="#fff" size={wp(5)} />
+                  </Bg_view>
+                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                    <Feather name="upload" color="#fff" size={wp(5)} />
+                  </Bg_view>
+                </Bg_view>
+                <ScrollView showVerticalScrollIndicator={false}>
                   {!history ? (
                     <Bg_view style={{borderRadius: wp(2.8), padding: wp(4)}}>
                       <ActivityIndicator color="#006dbb" size="large" />
@@ -230,8 +228,8 @@ class History extends React.Component {
                       text="No test history yet."
                     />
                   )}
-                </Bg_view>
-              </ScrollView>
+                </ScrollView>
+              </Bg_view>
 
               <Cool_modal ref={clear_modal => (this.clear_modal = clear_modal)}>
                 <Confirm_clear_history
