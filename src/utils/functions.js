@@ -216,7 +216,7 @@ const camel_case_to_human_case = camel_case_str => {
 
   // Capitalize the first letter of each word and join them with spaces
   let human_case_str = words
-    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .map(word => word.charAt(0)?.toUpperCase() + word.slice(1))
     .join(' ');
 
   return human_case_str;

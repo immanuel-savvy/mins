@@ -162,8 +162,14 @@ class History extends React.Component {
                                 }}>
                                 <Fr_text size={wp(4)}>
                                   {`${
-                                    net.netinfo?.details?.carrier
-                                  } (${net.netinfo?.details?.cellularGeneration.toUpperCase()})`}
+                                    net.netinfo?.details?.carrier ||
+                                    net.netinfo?.details?.ipAddress
+                                  } (${
+                                    net.netinfo?.details?.cellularGeneration?.toUpperCase() ||
+                                    `${
+                                      net.netinfo?.details?.linkSpeed || '-'
+                                    } Mbps`
+                                  }})`}
                                 </Fr_text>
                               </Bg_view>
 

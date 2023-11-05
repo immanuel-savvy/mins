@@ -50,7 +50,7 @@ class Speed extends React.Component {
                   style={{
                     fontSize: wp(9),
                     color: '#fff',
-                    marginBottom: hp(15),
+                    marginBottom: hp(5),
                   }}>
                   Test your data{' '}
                   <Fr_text style={{fontSize: wp(9), color: '#fc3'}}>

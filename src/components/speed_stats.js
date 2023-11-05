@@ -190,7 +190,7 @@ class Speed_stats extends React.Component {
           )}
         </Bg_view>
         {did_start && traffic_stats ? (
-          <Bg_view style={{alignItems: 'center'}} no_bg>
+          <Bg_view style={{alignItems: 'center', marginTop: hp(2)}} no_bg>
             <Text_btn
               text="Run again!"
               accent
