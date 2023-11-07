@@ -49,10 +49,7 @@ class Speed_header extends React.Component {
                       fontSize: 18,
                       textTransform: 'uppercase',
                     }}>
-                    {!netinfo
-                      ? ''
-                      : netinfo?.details?.cellularGeneration ||
-                        `${netinfo?.details?.linkSpeed || '-'} Mbps`}
+                    {!netinfo ? '' : netinfo?.details?.cellularGeneration || ``}
                   </Fr_text>
                   <Fr_text style={{color: '#fff', fontSize: 18}}>
                     {netinfo?.details?.carrier || netinfo?.details?.ipAddress}

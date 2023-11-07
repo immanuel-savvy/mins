@@ -143,9 +143,13 @@ class Mins extends React.Component {
     this.state = {loading: true};
   }
 
-  componentDidMount = async () => {
+  refresh_network = async () => {
     let netinfo = await NetInfo.fetch();
     this.setState({netinfo});
+  };
+
+  componentDidMount = async () => {
+    await this.refresh_network();
 
     let get_one_time_location = () => {
       Geolocation.getCurrentPosition(
@@ -174,12 +178,12 @@ class Mins extends React.Component {
             .catch(err => {
               toast("Couldn't get location details");
               console.log(err.message);
-              this.setState({loading: false});
+              this.setState({loading: false}, get_one_time_location);
             });
         },
         error => {
           console.log(error.message);
-          this.setState({loading: false});
+          this.setState({loading: false}, get_one_time_location);
         },
         {
           enableHighAccuracy: false,
@@ -249,7 +253,12 @@ class Mins extends React.Component {
           {loading ? (
             <Splash />
           ) : (
-            <App_data.Provider value={{netinfo, location}}>
+            <App_data.Provider
+              value={{
+                netinfo,
+                refresh_network: this.refresh_network,
+                location,
+              }}>
               <Test_history.Provider value={{history}}>
                 <SafeAreaView style={{flex: 1}}>
                   <App_stack_entry />

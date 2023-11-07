@@ -8,6 +8,8 @@ import {CountUp} from 'use-count-up';
 import Text_btn from './text_btn';
 import {TouchableWithoutFeedback, View} from 'react-native';
 import {emitter} from '../../Mins';
+import {App_data} from '../../Contexts';
+import networkSpeed from 'react-native-network-speed';
 
 class Speed_stats extends React.Component {
   constructor(props) {
@@ -18,6 +20,24 @@ class Speed_stats extends React.Component {
     };
   }
 
+  componentDidMount = () => {
+    networkSpeed.startListenNetworkSpeed(
+      ({
+        downLoadSpeed,
+        downLoadSpeedCurrent,
+        upLoadSpeed,
+        upLoadSpeedCurrent,
+      }) => {
+        console.log(downLoadSpeed + 'kb/s'); // download speed for the entire device 整个设备的下载速度
+        console.log(downLoadSpeedCurrent + 'kb/s'); // download speed for the current app 当前app的下载速度(currently can only be used on Android)
+        console.log(upLoadSpeed + 'kb/s'); // upload speed for the entire device 整个设备的上传速度
+        console.log(upLoadSpeedCurrent + 'kb/s'); // upload speed for the current app 当前app的上传速度(currently can only be used on Android)
+      },
+    );
+    // stop
+    networkSpeed.stopListenNetworkSpeed();
+  };
+
   begin_measure = () => {
     this.previous_stats = this.state.traffic_stats
       ? {...this.state.traffic_stats}
@@ -25,7 +45,9 @@ class Speed_stats extends React.Component {
     this.setState(
       {did_start: true, starting: true, traffic_stats: null},
       async () => {
+        this.refresh_network();
         const value = await Ping.getTrafficStats();
+        console.log(value);
 
         let {
           receivedNetworkSpeed,
@@ -73,134 +95,165 @@ class Speed_stats extends React.Component {
     return mbps;
   }
 
-  componentDidMount = async () => {};
-
   render() {
     let {start} = this.props;
     let {did_start, traffic_stats, starting} = this.state;
 
     return (
-      <Bg_view flex no_bg style={{paddingVertical: 40}}>
-        {!did_start ? null : (
-          <Bg_view horizontal no_bg style={{justifyContent: 'space-around'}}>
-            <Bg_view no_bg>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Download</Fr_text>
+      <App_data.Consumer>
+        {({refresh_network}) => {
+          this.refresh_network = refresh_network;
 
-              <Fr_text style={{fontSize: 30}} bold accent>
-                {traffic_stats ? (
-                  <CountUp
-                    isCounting={!!traffic_stats}
-                    end={
-                      this.bpsToMbps(traffic_stats?.receivedNetworkSpeed) || 0
-                    }
-                    duration={3.2}
-                  />
-                ) : (
-                  '0.00'
-                )}
-              </Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Mbps</Fr_text>
-            </Bg_view>
-            <Bg_view no_bg>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Upload</Fr_text>
-              <Fr_text style={{fontSize: 30}} bold accent>
-                {traffic_stats ? (
-                  <CountUp
-                    isCounting={!!traffic_stats}
-                    end={this.bpsToMbps(traffic_stats?.sendNetworkSpeed) || 0}
-                    duration={3.2}
-                  />
-                ) : (
-                  '0.00'
-                )}
-              </Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Mbps</Fr_text>
-            </Bg_view>
-            <Bg_view no_bg>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>Latency</Fr_text>
-              <Fr_text style={{fontSize: 30}} bold accent>
-                {traffic_stats ? (
-                  <CountUp
-                    isCounting={!!traffic_stats}
-                    end={traffic_stats?.latency || 0}
-                    duration={3.2}
-                  />
-                ) : (
-                  '0.00'
-                )}
-              </Fr_text>
-              <Fr_text style={{color: '#fff', fontSize: 18}}>ms</Fr_text>
-            </Bg_view>
-          </Bg_view>
-        )}
+          return (
+            <Bg_view flex no_bg style={{paddingVertical: 40}}>
+              {!did_start ? null : (
+                <Bg_view
+                  horizontal
+                  no_bg
+                  style={{justifyContent: 'space-around'}}>
+                  <Bg_view no_bg>
+                    <Fr_text style={{color: '#fff', fontSize: 18}}>
+                      Download
+                    </Fr_text>
 
-        <Bg_view style={{minHeight: hp(did_start ? 40 : 15)}} no_bg>
-          {traffic_stats ? (
-            <>
-              <Bg_view style={{alignSelf: 'center', marginTop: hp(10)}} no_bg>
-                <Bg_view no_bg>
-                  <RNSpeedometer
-                    value={
-                      (this.bpsToMbps(traffic_stats.receivedNetworkSpeed) +
-                        this.bpsToMbps(traffic_stats.sendNetworkSpeed)) /
-                      2
-                    }
-                    defaultValue={0}
-                    size={wp(75)}
-                    allowedDecimals={2}
-                  />
-                </Bg_view>
-              </Bg_view>
-            </>
-          ) : (
-            <Bg_view
-              flex
-              no_bg
-              style={{justifyContent: 'center', alignItems: 'center'}}>
-              <TouchableWithoutFeedback
-                style={{height: wp(50), width: wp(50), borderRadius: wp(50)}}
-                onPress={() => {
-                  start();
-                  this.begin_measure();
-                }}>
-                <View>
-                  <Bg_view
-                    shadowed
-                    style={{
-                      height: wp(45),
-                      width: wp(45),
-                      borderRadius: wp(45),
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      elevation: 10,
-                      shadowColor: '#000',
-                      backgroundColor: '#efffdf',
-                    }}>
-                    <Fr_text
-                      style={{
-                        textTransform: 'uppercase',
-                        fontSize: wp(starting ? 5 : 7.5),
-                      }}>
-                      {starting ? 'Starting...' : 'start'}
+                    <Fr_text style={{fontSize: 30}} bold accent>
+                      {traffic_stats ? (
+                        <CountUp
+                          isCounting={!!traffic_stats}
+                          end={
+                            this.bpsToMbps(
+                              traffic_stats?.receivedNetworkSpeed,
+                            ) || 0
+                          }
+                          duration={3.2}
+                        />
+                      ) : (
+                        '0.00'
+                      )}
+                    </Fr_text>
+                    <Fr_text style={{color: '#fff', fontSize: 18}}>
+                      Mbps
                     </Fr_text>
                   </Bg_view>
-                </View>
-              </TouchableWithoutFeedback>
+                  <Bg_view no_bg>
+                    <Fr_text style={{color: '#fff', fontSize: 18}}>
+                      Upload
+                    </Fr_text>
+                    <Fr_text style={{fontSize: 30}} bold accent>
+                      {traffic_stats ? (
+                        <CountUp
+                          isCounting={!!traffic_stats}
+                          end={
+                            this.bpsToMbps(traffic_stats?.sendNetworkSpeed) || 0
+                          }
+                          duration={3.2}
+                        />
+                      ) : (
+                        '0.00'
+                      )}
+                    </Fr_text>
+                    <Fr_text style={{color: '#fff', fontSize: 18}}>
+                      Mbps
+                    </Fr_text>
+                  </Bg_view>
+                  <Bg_view no_bg>
+                    <Fr_text style={{color: '#fff', fontSize: 18}}>
+                      Latency
+                    </Fr_text>
+                    <Fr_text style={{fontSize: 30}} bold accent>
+                      {traffic_stats ? (
+                        <CountUp
+                          isCounting={!!traffic_stats}
+                          end={traffic_stats?.latency || 0}
+                          duration={3.2}
+                        />
+                      ) : (
+                        '0.00'
+                      )}
+                    </Fr_text>
+                    <Fr_text style={{color: '#fff', fontSize: 18}}>ms</Fr_text>
+                  </Bg_view>
+                </Bg_view>
+              )}
+
+              <Bg_view style={{minHeight: hp(did_start ? 40 : 15)}} no_bg>
+                {traffic_stats ? (
+                  <>
+                    <Bg_view
+                      style={{alignSelf: 'center', marginTop: hp(10)}}
+                      no_bg>
+                      <Bg_view no_bg>
+                        <RNSpeedometer
+                          value={
+                            (this.bpsToMbps(
+                              traffic_stats.receivedNetworkSpeed,
+                            ) +
+                              this.bpsToMbps(traffic_stats.sendNetworkSpeed)) /
+                            2
+                          }
+                          defaultValue={0}
+                          size={wp(75)}
+                          allowedDecimals={2}
+                        />
+                      </Bg_view>
+                    </Bg_view>
+                  </>
+                ) : (
+                  <Bg_view
+                    flex
+                    no_bg
+                    style={{justifyContent: 'center', alignItems: 'center'}}>
+                    <TouchableWithoutFeedback
+                      style={{
+                        height: wp(50),
+                        width: wp(50),
+                        borderRadius: wp(50),
+                      }}
+                      onPress={() => {
+                        start();
+                        this.begin_measure();
+                      }}>
+                      <View>
+                        <Bg_view
+                          shadowed
+                          style={{
+                            height: wp(45),
+                            width: wp(45),
+                            borderRadius: wp(45),
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            elevation: 10,
+                            shadowColor: '#000',
+                            backgroundColor: '#efffdf',
+                          }}>
+                          <Fr_text
+                            style={{
+                              textTransform: 'uppercase',
+                              fontSize: wp(starting ? 5 : 7.5),
+                            }}>
+                            {starting ? 'Starting...' : 'start'}
+                          </Fr_text>
+                        </Bg_view>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  </Bg_view>
+                )}
+              </Bg_view>
+              {did_start && traffic_stats ? (
+                <Bg_view style={{alignItems: 'center', marginTop: hp(2)}} no_bg>
+                  <Text_btn
+                    text="Run again!"
+                    accent
+                    bold
+                    action={this.begin_measure}
+                    centralise
+                  />
+                </Bg_view>
+              ) : null}
             </Bg_view>
-          )}
-        </Bg_view>
-        {did_start && traffic_stats ? (
-          <Bg_view style={{alignItems: 'center', marginTop: hp(2)}} no_bg>
-            <Text_btn
-              text="Run again!"
-              accent
-              bold
-              action={this.begin_measure}
-              centralise
-            />
-          </Bg_view>
-        ) : null}
-      </Bg_view>
+          );
+        }}
+      </App_data.Consumer>
     );
   }
 }

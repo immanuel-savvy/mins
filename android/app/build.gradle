@@ -116,7 +116,7 @@ dependencies {
     implementation("com.facebook.react:react-android")
 
     //noinspection GradleDynamicVersion
-    implementation "com.facebook.react:react-native:+"  // From node_modules
+    implementation "com.facebook.react:react-native:0.72.6"  // From node_modules
 
 
     implementation 'com.facebook.fresco:fresco:2.0.0'
