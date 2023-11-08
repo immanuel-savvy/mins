@@ -4,9 +4,13 @@ import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
 import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint;
 import com.facebook.react.defaults.DefaultReactActivityDelegate;
+import android.content.pm.PackageManager;
+import com.facebook.react.modules.core.PermissionAwareActivity;
+import com.facebook.react.modules.core.PermissionListener;
 
 public class MainActivity extends ReactActivity {
 
+  private PermissionListener permissionListener;
   /**
    * Returns the name of the main component registered from JavaScript. This is used to schedule
    * rendering of the component.
@@ -15,6 +19,15 @@ public class MainActivity extends ReactActivity {
   protected String getMainComponentName() {
     return "mins";
   }
+
+   @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (permissionListener != null && requestCode == 123) {
+            permissionListener.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
 
   /**
    * Returns the instance of the {@link ReactActivityDelegate}. Here we use a util class {@link

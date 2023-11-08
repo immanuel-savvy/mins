@@ -8,9 +8,12 @@ import {
   StatusBar,
   TouchableWithoutFeedback,
   View,
+  NativeModules,
 } from 'react-native';
 import Speed_header from '../components/speed_header';
 import Speed_stats from '../components/speed_stats';
+
+const {RadioParameters} = NativeModules;
 
 class Speed extends React.Component {
   constructor(props) {
@@ -19,7 +22,27 @@ class Speed extends React.Component {
     this.state = {};
   }
 
-  componentDidMount = async () => {};
+  componentDidMount = async () => {
+    RadioParameters.getSignalStrength()
+      .then(signalStrength => {
+        console.log('Signal Strength:', signalStrength);
+      })
+      .catch(error => {
+        console.error('Error retrieving signal strength:', error);
+      });
+
+    RadioParameters.getNetworkType()
+      .then(networkType => {
+        console.log('Network Type:', networkType);
+      })
+      .catch(error => {
+        if (error === 'PERMISSION_DENIED') {
+          console.log('Permission denied. Handle accordingly.');
+        } else {
+          console.log('Error retrieving network type:', error);
+        }
+      });
+  };
 
   start = () => {
     this.setState({started: true, did_start: true});
