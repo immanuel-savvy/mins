@@ -169,7 +169,7 @@ class History extends React.Component {
                                     `${
                                       net.netinfo?.details?.linkSpeed || '-'
                                     } Mbps`
-                                  }})`}
+                                  })`}
                                 </Fr_text>
                               </Bg_view>
 

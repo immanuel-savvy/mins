@@ -9,7 +9,7 @@ import Text_btn from './text_btn';
 import {TouchableWithoutFeedback, View} from 'react-native';
 import {emitter} from '../../Mins';
 import {App_data} from '../../Contexts';
-import networkSpeed from 'react-native-network-speed';
+import {labels} from '../utils/speedo_labels';
 
 class Speed_stats extends React.Component {
   constructor(props) {
@@ -20,23 +20,7 @@ class Speed_stats extends React.Component {
     };
   }
 
-  componentDidMount = () => {
-    networkSpeed.startListenNetworkSpeed(
-      ({
-        downLoadSpeed,
-        downLoadSpeedCurrent,
-        upLoadSpeed,
-        upLoadSpeedCurrent,
-      }) => {
-        console.log(downLoadSpeed + 'kb/s'); // download speed for the entire device 整个设备的下载速度
-        console.log(downLoadSpeedCurrent + 'kb/s'); // download speed for the current app 当前app的下载速度(currently can only be used on Android)
-        console.log(upLoadSpeed + 'kb/s'); // upload speed for the entire device 整个设备的上传速度
-        console.log(upLoadSpeedCurrent + 'kb/s'); // upload speed for the current app 当前app的上传速度(currently can only be used on Android)
-      },
-    );
-    // stop
-    networkSpeed.stopListenNetworkSpeed();
-  };
+  componentDidMount = () => {};
 
   begin_measure = () => {
     this.previous_stats = this.state.traffic_stats
@@ -46,9 +30,21 @@ class Speed_stats extends React.Component {
       {did_start: true, starting: true, traffic_stats: null},
       async () => {
         this.refresh_network();
-        const value = await Ping.getTrafficStats();
-        console.log(value);
+        let latency;
 
+        try {
+          const ms = await Ping.start('8.8.8.8', {timeout: 1000});
+          console.log(ms);
+          latency = ms / 2;
+          this.prev_latency = latency;
+        } catch (error) {
+          console.log('special code', error.code, error.message);
+          latency = this.prev_latency;
+        }
+
+        const value = await Ping.getTrafficStats('8.8.8.8');
+
+        console.log(value);
         let {
           receivedNetworkSpeed,
           sendNetworkSpeed,
@@ -57,26 +53,31 @@ class Speed_stats extends React.Component {
         } = value;
 
         let traffic_stats = {
-          receivedNetworkSpeed: Number(receivedNetworkSpeed.slice(0, -3)),
-          sendNetworkSpeed: Number(sendNetworkSpeed.slice(0, -3)),
-          receivedNetworkTotal: Number(receivedNetworkTotal.slice(0, -2)),
-          sendNetworkTotal: Number(sendNetworkTotal.slice(0, -2)),
+          receivedNetworkSpeed: parseInt(receivedNetworkSpeed, 10),
+          sendNetworkSpeed: parseInt(sendNetworkSpeed, 10),
+          receivedNetworkTotal: parseInt(receivedNetworkTotal, 10),
+          sendNetworkTotal: parseInt(sendNetworkTotal, 10),
         };
+
         if (
           !traffic_stats.receivedNetworkSpeed ||
           !traffic_stats.sendNetworkSpeed ||
           !traffic_stats.receivedNetworkTotal ||
           !traffic_stats.sendNetworkTotal
         ) {
-          if (!this.previous_stats) return this.begin_measure();
-          else traffic_stats = this.previous_stats;
+          return this.begin_measure();
         } else this.previous_stats = traffic_stats;
 
-        traffic_stats.latency = parseInt(
-          traffic_stats.receivedNetworkTotal /
-            this.bpsToMbps(traffic_stats.receivedNetworkSpeed),
+        traffic_stats.latency = Number(
+          (
+            latency ||
+            (traffic_stats.receivedNetworkTotal * 1024 * 1024) /
+              traffic_stats.receivedNetworkSpeed /
+              1000
+          ).toFixed(2),
         );
 
+        console.log(traffic_stats);
         this.setState(
           {
             traffic_stats,
@@ -91,7 +92,7 @@ class Speed_stats extends React.Component {
   bpsToMbps(bps) {
     if (!bps) return;
 
-    let mbps = bps / 100;
+    let mbps = bps / 10;
     return mbps;
   }
 
@@ -184,6 +185,7 @@ class Speed_stats extends React.Component {
                       no_bg>
                       <Bg_view no_bg>
                         <RNSpeedometer
+                          labels={labels}
                           value={
                             (this.bpsToMbps(
                               traffic_stats.receivedNetworkSpeed,
@@ -191,8 +193,10 @@ class Speed_stats extends React.Component {
                               this.bpsToMbps(traffic_stats.sendNetworkSpeed)) /
                             2
                           }
+                          labelStyle={{color: '#f9f059'}}
                           defaultValue={0}
                           size={wp(75)}
+                          maxValue={75}
                           allowedDecimals={2}
                         />
                       </Bg_view>

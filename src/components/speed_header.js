@@ -17,7 +17,8 @@ class Speed_header extends React.Component {
   render() {
     return (
       <App_data.Consumer>
-        {({netinfo, location}) => {
+        {({netinfo, location, isp}) => {
+          netinfo = netinfo ? {...netinfo, ...isp} : netinfo;
           return (
             <Bg_view
               no_bg
@@ -29,13 +30,13 @@ class Speed_header extends React.Component {
                 borderBottomColor: '#fff',
                 borderBottomWidth: 2,
               }}>
-              <Bg_view no_bg horizontal>
+              <Bg_view no_bg horizontal flex={6}>
                 <Icon
                   icon={require('./../assets/icons/antenna.jpeg')}
                   style={{height: wp(15), width: wp(15)}}
                 />
 
-                <Bg_view no_bg style={{marginLeft: 10}}>
+                <Bg_view no_bg style={{marginLeft: 10}} flex>
                   <Fr_text style={{color: '#fff', fontSize: 18}} bold>
                     {!netinfo
                       ? '-'
@@ -44,24 +45,31 @@ class Speed_header extends React.Component {
                       : 'Data SIM'}
                   </Fr_text>
                   <Fr_text
+                    numberOfLines={1}
                     style={{
                       color: '#fff',
                       fontSize: 18,
                       textTransform: 'uppercase',
                     }}>
-                    {!netinfo ? '' : netinfo?.details?.cellularGeneration || ``}
+                    {!netinfo
+                      ? ''
+                      : netinfo.isp ||
+                        netinfo?.details?.cellularGeneration ||
+                        ``}
                   </Fr_text>
                   <Fr_text style={{color: '#fff', fontSize: 18}}>
-                    {netinfo?.details?.carrier || netinfo?.details?.ipAddress}
+                    {netinfo?.details?.carrier || netinfo?.details?.ssid}
                   </Fr_text>
-                  <Fr_text style={{color: '#fff', fontSize: 18}}>
+                  <Fr_text
+                    numberOfLines={1}
+                    style={{color: '#fff', fontSize: 18}}>
                     {location
                       ? `${location.locality}, ${location.city}`
                       : '...'}
                   </Fr_text>
                 </Bg_view>
               </Bg_view>
-              <Bg_view no_bg style={{marginRight: 20}}>
+              <Bg_view no_bg style={{marginRight: 10}} flex={3}>
                 <Fr_text style={{color: '#fff', fontSize: 18}} bold>
                   Connection
                 </Fr_text>

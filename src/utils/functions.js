@@ -208,6 +208,25 @@ const flatten_object = obj => {
   return Object.entries(result);
 };
 
+const copy_object = object => {
+  if (typeof object !== 'object') return object;
+
+  let new_object = {...object};
+  for (let prop in new_object) {
+    let val = new_object[prop];
+    if (
+      Array.isArray(val) &&
+      typeof val[0] === 'object' &&
+      val[0] &&
+      valid_id(val[0]._id)
+    )
+      new_object[val] = val.map(v => copy_object(v));
+    else if (typeof val === 'object' && val) new_object[val] = copy_object(val);
+  }
+
+  return new_object;
+};
+
 const camel_case_to_human_case = camel_case_str => {
   // Split the camelCase string into words
   let words = camel_case_str
@@ -244,6 +263,7 @@ export {
   format_quick_time,
   generate_random_string,
   commalise_figures,
+  copy_object,
   date_string,
   month_index,
   time_string,

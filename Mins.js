@@ -16,8 +16,9 @@ import Networks from './src/screens/Networks';
 import History from './src/screens/History';
 import Settings from './src/screens/Settings';
 import Icon from './src/components/icon';
-import {App_data, Test_history} from './Contexts';
+import {App_data, Networks_data, Test_history} from './Contexts';
 import toast from './src/utils/toast';
+import {copy_object} from './src/utils/functions';
 
 const emitter = new Emitter();
 
@@ -144,7 +145,19 @@ class Mins extends React.Component {
   }
 
   refresh_network = async () => {
-    let netinfo = await NetInfo.fetch();
+    let {netinfo} = this.state;
+    let _netinfo = {...netinfo};
+    netinfo = await NetInfo.fetch();
+
+    if (JSON.stringify(netinfo) !== JSON.stringify(_netinfo)) {
+      fetch('http://ip-api.com/json/')
+        .then(data => data.json())
+        .then(res => {
+          this.setState({isp: res});
+        })
+        .catch(e => console.log(e));
+    }
+
     this.setState({netinfo});
   };
 
@@ -209,11 +222,11 @@ class Mins extends React.Component {
     };
 
     this.new_test = async test => {
-      let {history, netinfo, location_info} = this.state;
+      let {history, netinfo, location_info, isp} = this.state;
       if (!history) history = await this.load_history();
 
       test.timestamp = Date.now();
-      test.netinfo = netinfo;
+      test.netinfo = {...netinfo, ...isp};
       test.location = location_info;
 
       history.unshift(test);
@@ -234,6 +247,60 @@ class Mins extends React.Component {
   persist_history = async () => {
     let {history} = this.state;
     await AsyncStorage.setItem('history', JSON.stringify(history));
+
+    this.aggregate_network(copy_object(history[0]));
+  };
+
+  get_net = test => {
+    let {networks} = this.state;
+
+    return networks.find(
+      n =>
+        n?.netinfo?.isp === test?.netinfo?.isp &&
+        this.get_area(n) === this.get_area(test),
+    );
+  };
+
+  get_area = o => {
+    return `${o?.location?.locality}-${o?.location?.city}-${o?.location?.countryName}`;
+  };
+
+  aggregate_network = async test => {
+    let has_net;
+
+    let my_net = this.get_net(test);
+    has_net = !!my_net;
+
+    if (has_net) {
+      if (
+        my_net.receivedNetworkSpeed > test.receivedNetworkSpeed &&
+        my_net.receivedNetworkTotal > test.receivedNetworkTotal &&
+        my_net.sendNetworkTotal > test.sendNetworkTotal &&
+        my_net.sendNetworkSpeed > test.sendNetworkSpeed
+      )
+        return;
+    }
+
+    test.isp = test.netinfo.isp;
+    test.area = this.get_area(test);
+    fetch('aggregate_network', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(test),
+    })
+      .then(data => data.json)
+      .then(res => {
+        let {networks} = this.state;
+        networks = networks.map(n => {
+          if (n.area === test.area && n.isp === test.isp) return res;
+          return n;
+        });
+        this.setState({networks});
+      })
+      .catch(e => console.log(e));
   };
 
   load_history = async () => {
@@ -244,8 +311,23 @@ class Mins extends React.Component {
     return history;
   };
 
+  load_networks = async () => {
+    let {location} = this.state;
+    if (!location) return this.setState({networks: new Array()});
+
+    fetch('http://localhost:3700/networks', {
+      method: 'post',
+      body: JSON.stringify({
+        area: this.get_area({location}),
+      }),
+    })
+      .then(data => data.json())
+      .then(networks => this.setState({networks}))
+      .catch(e => console.log(e));
+  };
+
   render = () => {
-    let {loading, netinfo, history, location} = this.state;
+    let {loading, netinfo, history, isp, location, networks} = this.state;
 
     return (
       <NavigationContainer>
@@ -255,15 +337,19 @@ class Mins extends React.Component {
           ) : (
             <App_data.Provider
               value={{
+                networks,
                 netinfo,
+                isp,
                 refresh_network: this.refresh_network,
-                location,
               }}>
-              <Test_history.Provider value={{history}}>
-                <SafeAreaView style={{flex: 1}}>
-                  <App_stack_entry />
-                </SafeAreaView>
-              </Test_history.Provider>
+              <Networks_data.Provider
+                value={{location, load_networks: this.load_networks}}>
+                <Test_history.Provider value={{history}}>
+                  <SafeAreaView style={{flex: 1}}>
+                    <App_stack_entry />
+                  </SafeAreaView>
+                </Test_history.Provider>
+              </Networks_data.Provider>
             </App_data.Provider>
           )}
         </SafeAreaView>
