@@ -42,6 +42,34 @@ class Speed extends React.Component {
           console.log('Error retrieving network type:', error);
         }
       });
+
+    RadioParameters.getTAC()
+      .then(tac => {
+        console.log('TAC (Tracking Area Code):', tac);
+      })
+      .catch(error => {
+        console.error('Error retrieving TAC:', error);
+      });
+
+    RadioParameters.getCellInfo()
+      .then(data => {
+        console.log('Cell Info', data);
+      })
+      .catch(err => console.log(err));
+
+    RadioParameters.getNetworkInfo()
+      .then(data => {
+        console.log('Network Info', data);
+      })
+      .catch(err => console.log(err));
+
+    RadioParameters.getLAC()
+      .then(lac => {
+        console.log('LAC (Location Area Code):', lac);
+      })
+      .catch(error => {
+        console.error('Error retrieving LAC:', error);
+      });
   };
 
   start = () => {

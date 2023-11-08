@@ -164,6 +164,8 @@ class Mins extends React.Component {
   componentDidMount = async () => {
     await this.refresh_network();
 
+    await this.requestPhoneStatePermission();
+
     let get_one_time_location = () => {
       Geolocation.getCurrentPosition(
         position => {
@@ -254,8 +256,6 @@ class Mins extends React.Component {
     emitter.listen('fetch_history', this.fetch_history);
     emitter.listen('new_test', this.new_test);
     emitter.listen('clear_history', this.clear_history);
-
-    this.requestPhoneStatePermission();
   };
 
   _history_length = 75;
