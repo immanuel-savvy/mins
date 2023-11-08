@@ -35,7 +35,7 @@ class Speed_stats extends React.Component {
 
         try {
           const ms = await Ping.start('8.8.8.8', {timeout: 1000});
-          console.log(ms);
+
           latency = ms / 2;
           this.prev_latency = latency;
         } catch (error) {
@@ -45,7 +45,6 @@ class Speed_stats extends React.Component {
 
         const value = await Ping.getTrafficStats('8.8.8.8');
 
-        console.log(value);
         let {
           receivedNetworkSpeed,
           sendNetworkSpeed,
@@ -78,7 +77,6 @@ class Speed_stats extends React.Component {
           ).toFixed(2),
         );
 
-        console.log(traffic_stats);
         this.setState(
           {
             traffic_stats,

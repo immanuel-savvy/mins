@@ -45,23 +45,22 @@ class Networks extends React.Component {
                       barStyle="light-content"
                       backgroundColor="#006dbb"
                     />
+                    <Bg_view style={{alignItems: 'center'}} no_bg>
+                      <Icon
+                        icon={require('./../assets/icons/logo_mins.png')}
+                        style={{height: wp(25), width: wp(25)}}
+                      />
+                    </Bg_view>
+
+                    <Bg_view no_bg style={{padding: wp(4)}}>
+                      <Fr_text bold style={{fontSize: wp(7.5)}} color="#fff">
+                        Network Stats
+                      </Fr_text>
+                      <Fr_text color="#fff">
+                        The average speeds users experienced in this area.
+                      </Fr_text>
+                    </Bg_view>
                     <ScrollView showVerticalScrollIndicator={false}>
-                      <Bg_view style={{alignItems: 'center'}} no_bg>
-                        <Icon
-                          icon={require('./../assets/icons/logo_mins.png')}
-                          style={{height: wp(25), width: wp(25)}}
-                        />
-                      </Bg_view>
-
-                      <Bg_view no_bg style={{padding: wp(4)}}>
-                        <Fr_text bold style={{fontSize: wp(7.5)}} color="#fff">
-                          Network Stats
-                        </Fr_text>
-                        <Fr_text color="#fff">
-                          The average speeds users experienced in this area.
-                        </Fr_text>
-                      </Bg_view>
-
                       <Bg_view
                         style={{
                           margin: wp(4),
@@ -158,16 +157,16 @@ class Networks extends React.Component {
                           />
                         )}
                       </Bg_view>
-
-                      <Fr_text style={{margin: wp(4), color: '#fff'}}>
-                        Location:{' '}
-                        <Fr_text bold color="#fff">
-                          {location
-                            ? `${location.locality}, ${location.city}`
-                            : '...'}
-                        </Fr_text>
-                      </Fr_text>
                     </ScrollView>
+
+                    <Fr_text style={{margin: wp(4), color: '#fff'}}>
+                      Location:{' '}
+                      <Fr_text bold color="#fff">
+                        {location
+                          ? `${location.locality}, ${location.city}`
+                          : '...'}
+                      </Fr_text>
+                    </Fr_text>
                   </Bg_view>
                 );
               }}

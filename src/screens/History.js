@@ -36,7 +36,6 @@ class History extends React.Component {
   toggle_details = () => this.details?.toggle();
 
   net_details = net => {
-    console.log(net);
     this.setState({net_in_focus: net}, this.toggle_details);
   };
 

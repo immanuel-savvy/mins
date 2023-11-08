@@ -279,12 +279,18 @@ class Mins extends React.Component {
     this.aggregate_network(copy_object(history[0]));
   };
 
+  get_isp = n => {
+    return `${n.netinfo.isp} ${
+      n.netinfo?.details?.linkSpeed || n.netinfo?.details?.cellularGeneration
+    }`;
+  };
+
   get_net = test => {
     let {networks} = this.state;
 
     return networks.find(
       n =>
-        n?.netinfo?.isp === test?.netinfo?.isp &&
+        this.get_isp(n) === this.get_isp(test) &&
         this.get_area(n) === this.get_area(test),
     );
   };
@@ -304,12 +310,13 @@ class Mins extends React.Component {
         my_net.receivedNetworkSpeed > test.receivedNetworkSpeed &&
         my_net.receivedNetworkTotal > test.receivedNetworkTotal &&
         my_net.sendNetworkTotal > test.sendNetworkTotal &&
-        my_net.sendNetworkSpeed > test.sendNetworkSpeed
+        my_net.sendNetworkSpeed > test.sendNetworkSpeed &&
+        my_net.latency < test.latency
       )
         return;
     }
 
-    test.isp = test.netinfo.isp;
+    test.isp = this.get_isp(test);
     test.area = this.get_area(test);
     fetch('http://mins.giitafrica.com/aggregate_network', {
       method: 'post',

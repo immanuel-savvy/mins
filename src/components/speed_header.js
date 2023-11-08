@@ -49,16 +49,16 @@ class Speed_header extends React.Component {
                     style={{
                       color: '#fff',
                       fontSize: 18,
-                      textTransform: 'uppercase',
                     }}>
                     {!netinfo
                       ? ''
                       : netinfo.isp?.split(' ')[0] ||
-                        netinfo?.details?.cellularGeneration ||
+                        netinfo?.details?.carrier ||
                         ``}
                   </Fr_text>
                   <Fr_text style={{color: '#fff', fontSize: 18}}>
-                    {netinfo?.details?.carrier || netinfo?.details?.ssid}
+                    {netinfo?.details?.cellularGeneration.toUpperCase() ||
+                      netinfo?.details?.ssid}
                   </Fr_text>
                   <Fr_text
                     numberOfLines={1}
