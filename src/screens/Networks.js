@@ -3,8 +3,10 @@ import Bg_view from '../components/bg_view';
 import Fr_text from '../components/fr_text';
 import Icon from '../components/icon';
 import {hp, wp} from '../utils/dimensions';
-import {ScrollView, StatusBar} from 'react-native';
+import {ActivityIndicator, ScrollView, StatusBar} from 'react-native';
 import {App_data, Networks_data} from '../../Contexts';
+import List_empty from '../components/listempty';
+import {bps_to_mbps} from '../utils/functions';
 
 class Networks extends React.Component {
   constructor(props) {
@@ -13,6 +15,13 @@ class Networks extends React.Component {
     this.state = {};
   }
 
+  headers = new Array(
+    'Operator',
+    'Download (Mbps)',
+    'Upload (Mbps)',
+    'Latency (ms)',
+  );
+
   componentDidMount = () => {
     this.load_networks();
   };
@@ -20,7 +29,7 @@ class Networks extends React.Component {
   render() {
     return (
       <Networks_data.Consumer>
-        {({load_networks}) => {
+        {({load_networks, networks, loaded_networks}) => {
           this.load_networks = load_networks;
 
           return (
@@ -59,33 +68,95 @@ class Networks extends React.Component {
                           paddingTop: wp(2.8),
                           borderRadius: wp(2.8),
                         }}>
-                        {this.networks.map((net, j) => {
-                          return (
-                            <Bg_view
-                              horizontal
-                              no_bg
-                              key={j}
-                              style={{
-                                borderBottomWidth: 4,
-                                borderBottomColor: '#006dbb',
-                                paddingVertical: hp(1.4),
-                                paddingHorizontal: wp(2.8),
-                                minHeight: hp(10),
-                              }}>
-                              {net.map((n, i) => (
+                        <Bg_view
+                          horizontal
+                          no_bg
+                          style={{
+                            borderBottomWidth: 4,
+                            borderBottomColor: '#006dbb',
+                            paddingVertical: hp(1.4),
+                            paddingHorizontal: wp(2.8),
+                            minHeight: hp(10),
+                          }}>
+                          {this.headers.map((n, i) => {
+                            return (
+                              <Bg_view
+                                no_bg
+                                key={i}
+                                flex
+                                style={{alignItems: 'center'}}>
+                                <Fr_text bold size={wp(4)}>
+                                  {n}
+                                </Fr_text>
+                              </Bg_view>
+                            );
+                          })}
+                        </Bg_view>
+                        {!loaded_networks ? (
+                          <Bg_view no_bg style={{padding: wp(4)}}>
+                            <ActivityIndicator color="#006dbb" size="large" />
+                          </Bg_view>
+                        ) : networks.length ? (
+                          networks.map((net, j) => {
+                            console.log(JSON.stringify(net, null, 2));
+                            return (
+                              <Bg_view
+                                horizontal
+                                no_bg
+                                key={j}
+                                style={{
+                                  borderBottomWidth: 4,
+                                  borderBottomColor: '#006dbb',
+                                  paddingVertical: hp(1.4),
+                                  paddingHorizontal: wp(2.8),
+                                  minHeight: hp(10),
+                                }}>
                                 <Bg_view
                                   no_bg
-                                  key={i}
+                                  flex
+                                  style={{alignItems: 'center'}}>
+                                  <Fr_text size={wp(4.5)}>
+                                    {`${net.isp?.split(' ')[0]} (${
+                                      net.netinfo?.details?.cellularGeneration?.toUpperCase() ||
+                                      `${
+                                        net.netinfo?.details?.linkSpeed || '-'
+                                      } Mbps`
+                                    })`}
+                                  </Fr_text>
+                                </Bg_view>
+                                <Bg_view
+                                  no_bg
+                                  flex
+                                  style={{alignItems: 'center'}}>
+                                  <Fr_text size={wp(4.5)}>
+                                    {bps_to_mbps(net.receivedNetworkSpeed)}
+                                  </Fr_text>
+                                </Bg_view>
+                                <Bg_view
+                                  no_bg
+                                  flex
+                                  style={{alignItems: 'center'}}>
+                                  <Fr_text size={wp(4.5)}>
+                                    {bps_to_mbps(net.sendNetworkSpeed)}
+                                  </Fr_text>
+                                </Bg_view>
+                                <Bg_view
+                                  no_bg
                                   flex
                                   style={{alignItems: 'center'}}>
                                   <Fr_text bold={!j} size={wp(j ? 4.5 : 4)}>
-                                    {n}
+                                    {net.latency}
                                   </Fr_text>
                                 </Bg_view>
-                              ))}
-                            </Bg_view>
-                          );
-                        })}
+                              </Bg_view>
+                            );
+                          })
+                        ) : (
+                          <List_empty
+                            style={{borderRadius: wp(4)}}
+                            text="No test networks yet."
+                          />
+                        )}
                       </Bg_view>
 
                       <Fr_text style={{margin: wp(4), color: '#fff'}}>

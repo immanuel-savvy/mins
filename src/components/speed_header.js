@@ -53,7 +53,7 @@ class Speed_header extends React.Component {
                     }}>
                     {!netinfo
                       ? ''
-                      : netinfo.isp ||
+                      : netinfo.isp?.split(' ')[0] ||
                         netinfo?.details?.cellularGeneration ||
                         ``}
                   </Fr_text>

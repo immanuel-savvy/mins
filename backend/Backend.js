@@ -14,20 +14,21 @@ router(app);
 
 app.get('/', (req, res) => res.send('<div><h1>Hi, its Mins.</h1></div>'));
 
-app.post('aggregate_network', (req, res) => {
+app.post('/aggregate_network', (req, res) => {
   let {test} = req.body;
 
   let network = AREA_NETWORKS.readone({area: test.area, isp: test.isp});
   if (network) {
     if (network.test.receivedNetworkSpeed < test.receivedNetworkSpeed)
-      network.test.receivedNetworkSpeed;
+      network.test.receivedNetworkSpeed = test.receivedNetworkSpeed;
     if (network.test.receivedNetworkTotal < test.receivedNetworkTotal)
-      network.test.receivedNetworkTotal;
+      network.test.receivedNetworkTotal = test.receivedNetworkTotal;
     if (network.test.sendNetworkSpeed < test.sendNetworkSpeed)
-      network.test.sendNetworkSpeed;
+      network.test.sendNetworkSpeed = test.sendNetworkSpeed;
     if (network.test.sendNetworkTotal < test.sendNetworkTotal)
-      network.test.sendNetworkTotal;
-    if (network.test.latency < test.latency) network.test.latency;
+      network.test.sendNetworkTotal = test.sendNetworkTotal;
+    if (network.test.latency > test.latency)
+      network.test.latency = test.latency;
 
     TESTS.update(network.test._id, {
       receivedNetworkSpeed: network.test.receivedNetworkSpeed,
@@ -44,10 +45,10 @@ app.post('aggregate_network', (req, res) => {
     AREA_NETWORKS.write({area: test.area, isp: test.isp, test: result._id});
   }
 
-  res.json({test});
+  res.json(test);
 });
 
-app.post('networks', (req, res) => {
+app.post('/networks', (req, res) => {
   let {area} = req.body;
 
   res.json(AREA_NETWORKS.read({area}).map(a => a.test));

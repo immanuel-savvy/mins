@@ -10,6 +10,7 @@ import {TouchableWithoutFeedback, View} from 'react-native';
 import {emitter} from '../../Mins';
 import {App_data} from '../../Contexts';
 import {labels} from '../utils/speedo_labels';
+import {bps_to_mbps} from '../utils/functions';
 
 class Speed_stats extends React.Component {
   constructor(props) {
@@ -89,13 +90,6 @@ class Speed_stats extends React.Component {
     );
   };
 
-  bpsToMbps(bps) {
-    if (!bps) return;
-
-    let mbps = bps / 10;
-    return mbps;
-  }
-
   render() {
     let {start} = this.props;
     let {did_start, traffic_stats, starting} = this.state;
@@ -122,9 +116,8 @@ class Speed_stats extends React.Component {
                         <CountUp
                           isCounting={!!traffic_stats}
                           end={
-                            this.bpsToMbps(
-                              traffic_stats?.receivedNetworkSpeed,
-                            ) || 0
+                            bps_to_mbps(traffic_stats?.receivedNetworkSpeed) ||
+                            0
                           }
                           duration={3.2}
                         />
@@ -145,7 +138,7 @@ class Speed_stats extends React.Component {
                         <CountUp
                           isCounting={!!traffic_stats}
                           end={
-                            this.bpsToMbps(traffic_stats?.sendNetworkSpeed) || 0
+                            bps_to_mbps(traffic_stats?.sendNetworkSpeed) || 0
                           }
                           duration={3.2}
                         />
@@ -187,10 +180,8 @@ class Speed_stats extends React.Component {
                         <RNSpeedometer
                           labels={labels}
                           value={
-                            (this.bpsToMbps(
-                              traffic_stats.receivedNetworkSpeed,
-                            ) +
-                              this.bpsToMbps(traffic_stats.sendNetworkSpeed)) /
+                            (bps_to_mbps(traffic_stats.receivedNetworkSpeed) +
+                              bps_to_mbps(traffic_stats.sendNetworkSpeed)) /
                             2
                           }
                           labelStyle={{color: '#f9f059'}}

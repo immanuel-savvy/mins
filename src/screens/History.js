@@ -17,7 +17,7 @@ import Text_btn from '../components/text_btn';
 import Cool_modal from '../components/cool_modal';
 import Confirm_clear_history from '../components/confirm_clear_history';
 import List_empty from '../components/listempty';
-import {date_string} from '../utils/functions';
+import {bps_to_mbps, date_string} from '../utils/functions';
 import Net_details from '../components/net_details';
 
 class History extends React.Component {
@@ -25,13 +25,6 @@ class History extends React.Component {
     super(props);
 
     this.state = {};
-  }
-
-  bpsToMbps(bps) {
-    if (!bps) return;
-
-    let mbps = bps / 100;
-    return mbps;
   }
 
   clear = () => this.clear_modal?.toggle();
@@ -163,7 +156,7 @@ class History extends React.Component {
                                 <Fr_text size={wp(4)}>
                                   {`${
                                     net.netinfo?.details?.carrier ||
-                                    net.netinfo?.details?.ipAddress
+                                    net.netinfo?.details?.ssid
                                   } (${
                                     net.netinfo?.details?.cellularGeneration?.toUpperCase() ||
                                     `${
@@ -193,10 +186,7 @@ class History extends React.Component {
                                   paddingLeft: wp(1.4),
                                 }}>
                                 <Fr_text size={wp(4)} centralise>
-                                  {`${parseInt(
-                                    net.receivedNetworkTotal /
-                                      this.bpsToMbps(net.receivedNetworkSpeed),
-                                  )} ms`}
+                                  {`${net.latency.toFixed(2)} ms`}
                                 </Fr_text>
                               </Bg_view>
 
@@ -208,7 +198,7 @@ class History extends React.Component {
                                   paddingLeft: wp(1.4),
                                 }}>
                                 <Fr_text size={wp(4)} centralise>
-                                  {this.bpsToMbps(net?.receivedNetworkSpeed)}
+                                  {bps_to_mbps(net?.receivedNetworkSpeed)}
                                 </Fr_text>
                               </Bg_view>
 
@@ -220,7 +210,7 @@ class History extends React.Component {
                                   paddingLeft: wp(1.4),
                                 }}>
                                 <Fr_text size={wp(4)} centralise>
-                                  {this.bpsToMbps(net?.sendNetworkSpeed)}
+                                  {bps_to_mbps(net?.sendNetworkSpeed)}
                                 </Fr_text>
                               </Bg_view>
                             </Bg_view>

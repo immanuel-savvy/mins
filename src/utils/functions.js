@@ -244,7 +244,7 @@ const camel_case_to_human_case = camel_case_str => {
 const bps_to_mbps = bps => {
   if (!bps) return;
 
-  let mbps = bps / 100;
+  let mbps = bps / 10;
   return mbps;
 };
 

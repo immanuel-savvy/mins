@@ -141,7 +141,7 @@ class Mins extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state = {loading: true};
+    this.state = {loading: true, networks: new Array(), loaded_networks: false};
   }
 
   refresh_network = async () => {
@@ -167,36 +167,51 @@ class Mins extends React.Component {
     let get_one_time_location = () => {
       Geolocation.getCurrentPosition(
         position => {
-          console.log(JSON.stringify(position, null, 2));
-
           fetch(
             `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`,
           )
             .then(data => data.json())
             .then(res => {
-              console.log(res);
-              this.setState({
-                location: res,
-                location_info: {
-                  ...position.coords,
-                  continent: res.continent,
-                  countryCode: res.countryCode,
-                  countryName: res.countryName,
-                  city: res.city,
-                  locality: res.locality,
+              this.setState(
+                {
+                  location: res,
+                  location_info: {
+                    ...position.coords,
+                    continent: res.continent,
+                    countryCode: res.countryCode,
+                    countryName: res.countryName,
+                    city: res.city,
+                    locality: res.locality,
+                  },
+                  loading: false,
                 },
-                loading: false,
-              });
+                async () =>
+                  await AsyncStorage.setItem(
+                    'location',
+                    JSON.stringify(this.state.location_info),
+                  ),
+              );
             })
-            .catch(err => {
+            .catch(async err => {
               toast("Couldn't get location details");
               console.log(err.message);
-              this.setState({loading: false}, get_one_time_location);
+              let location = await this.fetch_local_tion();
+              this.setState(
+                {loading: false, location_info: location, location},
+                get_one_time_location,
+              );
             });
         },
         error => {
           console.log(error.message);
-          this.setState({loading: false}, get_one_time_location);
+          this.fetch_local_tion()
+            .then(location => {
+              this.setState(
+                {loading: false, location, location_info: location},
+                get_one_time_location,
+              );
+            })
+            .catch(e => console.log(e, 'here meee'));
         },
         {
           enableHighAccuracy: false,
@@ -229,6 +244,9 @@ class Mins extends React.Component {
       test.netinfo = {...netinfo, ...isp};
       test.location = location_info;
 
+      history.length >= this._history_length &&
+        history.splice(-1 * (history.length - this._history_length));
+
       history.unshift(test);
       this.setState({history}, this.persist_history);
     };
@@ -236,6 +254,15 @@ class Mins extends React.Component {
     emitter.listen('fetch_history', this.fetch_history);
     emitter.listen('new_test', this.new_test);
     emitter.listen('clear_history', this.clear_history);
+  };
+
+  _history_length = 75;
+
+  fetch_local_tion = async () => {
+    let location = await AsyncStorage.getItem('location');
+    location = location ? JSON.parse(location) : new Object();
+
+    return location;
   };
 
   componentWillUnmount = () => {
@@ -246,6 +273,7 @@ class Mins extends React.Component {
 
   persist_history = async () => {
     let {history} = this.state;
+
     await AsyncStorage.setItem('history', JSON.stringify(history));
 
     this.aggregate_network(copy_object(history[0]));
@@ -262,7 +290,7 @@ class Mins extends React.Component {
   };
 
   get_area = o => {
-    return `${o?.location?.locality}-${o?.location?.city}-${o?.location?.countryName}`;
+    return `${o?.location?.locality}-${o?.location?.city}-${o?.location?.countryName}`.toLowerCase();
   };
 
   aggregate_network = async test => {
@@ -283,15 +311,15 @@ class Mins extends React.Component {
 
     test.isp = test.netinfo.isp;
     test.area = this.get_area(test);
-    fetch('aggregate_network', {
+    fetch('http://192.168.0.102:3700/aggregate_network', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
-      body: JSON.stringify(test),
+      body: JSON.stringify({test}),
     })
-      .then(data => data.json)
+      .then(data => data.json())
       .then(res => {
         let {networks} = this.state;
         networks = networks.map(n => {
@@ -315,19 +343,26 @@ class Mins extends React.Component {
     let {location} = this.state;
     if (!location) return this.setState({networks: new Array()});
 
-    fetch('http://localhost:3700/networks', {
+    fetch('http://192.168.0.102:3700/networks', {
       method: 'post',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
       body: JSON.stringify({
         area: this.get_area({location}),
       }),
     })
       .then(data => data.json())
-      .then(networks => this.setState({networks}))
+      .then(networks => {
+        this.setState({networks, loaded_networks: true});
+      })
       .catch(e => console.log(e));
   };
 
   render = () => {
-    let {loading, netinfo, history, isp, location, networks} = this.state;
+    let {loading, netinfo, history, isp, location, loaded_networks, networks} =
+      this.state;
 
     return (
       <NavigationContainer>
@@ -337,13 +372,18 @@ class Mins extends React.Component {
           ) : (
             <App_data.Provider
               value={{
-                networks,
+                location,
                 netinfo,
                 isp,
                 refresh_network: this.refresh_network,
               }}>
               <Networks_data.Provider
-                value={{location, load_networks: this.load_networks}}>
+                value={{
+                  location,
+                  load_networks: this.load_networks,
+                  loaded_networks,
+                  networks,
+                }}>
                 <Test_history.Provider value={{history}}>
                   <SafeAreaView style={{flex: 1}}>
                     <App_stack_entry />

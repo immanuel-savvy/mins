@@ -39,13 +39,6 @@ class Net_details extends React.Component {
     };
   }
 
-  bpsToMbps(bps) {
-    if (!bps) return;
-
-    let mbps = bps / 100;
-    return mbps;
-  }
-
   render() {
     let {toggle} = this.props;
     let {net_array} = this.state;
