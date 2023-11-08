@@ -311,7 +311,7 @@ class Mins extends React.Component {
 
     test.isp = test.netinfo.isp;
     test.area = this.get_area(test);
-    fetch('http://192.168.0.102:3700/aggregate_network', {
+    fetch('http://mins.giitafrica.com/aggregate_network', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -326,6 +326,7 @@ class Mins extends React.Component {
           if (n.area === test.area && n.isp === test.isp) return res;
           return n;
         });
+        !networks.length && networks.push(res);
         this.setState({networks});
       })
       .catch(e => console.log(e));
@@ -343,7 +344,7 @@ class Mins extends React.Component {
     let {location} = this.state;
     if (!location) return this.setState({networks: new Array()});
 
-    fetch('http://192.168.0.102:3700/networks', {
+    fetch('http://mins.giitafrica.com/networks', {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
