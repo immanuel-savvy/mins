@@ -23,6 +23,14 @@ import android.telephony.CellSignalStrengthLte;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.io.IOException;
 
 public class RadioParameters extends ReactContextBaseJavaModule {
   private ReactApplicationContext reactContext;
@@ -50,108 +58,185 @@ public class RadioParameters extends ReactContextBaseJavaModule {
       }
   }
 
-  @ReactMethod
-public void getNetworkType(Promise promise) {
-    if (ActivityCompat.checkSelfPermission(reactContext, Manifest.permission.READ_PHONE_STATE)
-        != PackageManager.PERMISSION_GRANTED) {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(reactContext.getCurrentActivity(),
-            Manifest.permission.READ_PHONE_STATE)) {
-            // Request the permission here
-            ActivityCompat.requestPermissions(reactContext.getCurrentActivity(), new String[]{Manifest.permission.READ_PHONE_STATE}, 123);
-
-        } else {
-            // Permission has not been granted, and user chose not to show rationale. Handle this case.
-            promise.reject("PERMISSION_DENIED", "Permission denied by user.");
-        }
-    } else {
-        // Permission is already granted, proceed to get the network type
+@ReactMethod
+    public void getNetworkType(Promise promise) {
         try {
-            int networkType = telephonyManager.getDataNetworkType();
-            promise.resolve(networkType);
+            int simCount = telephonyManager.getPhoneCount();
+            WritableArray result = Arguments.createArray();
+
+            for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+                try {
+                    int networkType = telephonyManager.createForSubscriptionId(subscriptionId).getDataNetworkType();
+                    result.pushInt(networkType);
+                } catch (Exception e) {
+                    result.pushNull(); // Null value for SIM slots without information
+                }
+            }
+
+            promise.resolve(result);
         } catch (Exception e) {
             promise.reject("NETWORK_TYPE_ERROR", e.getMessage());
         }
     }
-}
+
 
 @ReactMethod
-public void getTAC(Promise promise) {
-    try {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
-            if (cellInfoList != null) {
-                for (CellInfo cellInfo : cellInfoList) {
-                    if (cellInfo instanceof CellInfoLte) {
-                        CellSignalStrengthLte signalLte = ((CellInfoLte) cellInfo).getCellSignalStrength();
-                        int tac = ((CellInfoLte) cellInfo).getCellIdentity().getTac();
-                        promise.resolve(tac);
-                        return;
+    public void getTAC(Promise promise) {
+        try {
+            int simCount = telephonyManager.getPhoneCount();
+            WritableArray result = Arguments.createArray();
+
+            for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+                try {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR2) {
+                        List<CellInfo> cellInfoList = telephonyManager.createForSubscriptionId(subscriptionId).getAllCellInfo();
+                        if (cellInfoList != null) {
+                            for (CellInfo cellInfo : cellInfoList) {
+                                if (cellInfo instanceof CellInfoLte) {
+                                    CellSignalStrengthLte signalLte = ((CellInfoLte) cellInfo).getCellSignalStrength();
+                                    int tac = ((CellInfoLte) cellInfo).getCellIdentity().getTac();
+                                    result.pushInt(tac);
+                                    break; // Return the first valid TAC
+                                }
+                            }
+                        }
+                    } else {
+                        result.pushNull();
                     }
+                } catch (Exception e) {
+                    result.pushNull();
                 }
             }
+
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.reject("TAC_ERROR", e.getMessage());
         }
-        promise.reject("TAC_ERROR", "TAC not available on this device or API level.");
-    } catch (Exception e) {
-        promise.reject("TAC_ERROR", e.getMessage());
     }
-}
 
     @ReactMethod
-public void getCellInfo(Promise promise) {
-    try {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
-            WritableArray cellInfoArray = Arguments.createArray();
-
-            for (CellInfo cellInfo : cellInfoList) {
-                if (cellInfo instanceof CellInfoLte) {
-                    CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
-                    CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
-                    CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
-
-                    WritableMap cellInfoMap = Arguments.createMap();
-                    cellInfoMap.putInt("mcc", cellIdentityLte.getMcc());
-                    cellInfoMap.putInt("mnc", cellIdentityLte.getMnc());
-                    cellInfoMap.putInt("ci", cellIdentityLte.getCi());
-                    cellInfoMap.putInt("pci", cellIdentityLte.getPci());
-                    cellInfoMap.putInt("rsrp", signalStrengthLte.getRsrp());
-
-                    cellInfoArray.pushMap(cellInfoMap);
+    public void getLac(Promise promise) {
+        try {
+            int simCount = telephonyManager.getPhoneCount();
+            WritableArray result = Arguments.createArray();
+    
+            for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+                try {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                        // Check for necessary permissions
+                        if (reactContext.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+                            // Retrieve LAC (Location Area Code) for LTE
+                            if (telephonyManager.createForSubscriptionId(subscriptionId).getDataNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
+                                List<CellInfo> cellInfoList = telephonyManager.createForSubscriptionId(subscriptionId).getAllCellInfo();
+                                if (cellInfoList != null && !cellInfoList.isEmpty()) {
+                                    CellInfo cellInfo = cellInfoList.get(0);
+                                    if (cellInfo instanceof CellInfoLte) {
+                                        CellIdentityLte cellIdentityLte = ((CellInfoLte) cellInfo).getCellIdentity();
+                                        int lac = cellIdentityLte.getTac();
+                                        result.pushInt(lac);
+                                    } else {
+                                        result.pushInt(-1); // Default value if not LTE
+                                    }
+                                } else {
+                                    result.pushInt(-1); // Default value if no cell info
+                                }
+                            } else {
+                                result.pushInt(-1); // Default value if not LTE
+                            }
+                        } else {
+                            promise.reject("PERMISSION_DENIED", "READ_PHONE_STATE permission is required.");
+                            return;
+                        }
+                    } else {
+                        promise.reject("API_LEVEL_NOT_SUPPORTED", "API level not supported.");
+                        return;
+                    }
+                } catch (Exception e) {
+                    promise.reject("LAC_ERROR", e.getMessage());
+                    return;
                 }
             }
-
-            promise.resolve(cellInfoArray);
-        } else {
-            promise.reject("CELL_INFO_ERROR", "Cell information not available on this device or API level.");
+    
+            promise.resolve(result);
+        } catch (Exception e) {
+            promise.reject("LAC_ERROR", e.getMessage());
         }
-    } catch (Exception e) {
-        promise.reject("CELL_INFO_ERROR", e.getMessage());
     }
-}
+    
+    @ReactMethod
+    public void getCellInfos(Promise promise) {
+        try {
+            int simCount = telephonyManager.getPhoneCount();
+            WritableArray cellInfosArray = Arguments.createArray();
+    
+            for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+                try {
+                    TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
+    
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                        List<CellInfo> cellInfoList = telephonyManagerForSlot.getAllCellInfo();
+                        WritableArray cellInfoArray = Arguments.createArray();
+    
+                        for (CellInfo cellInfo : cellInfoList) {
+                            if (cellInfo instanceof CellInfoLte) {
+                                CellInfoLte cellInfoLte = (CellInfoLte) cellInfo;
+                                CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
+                                CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
+    
+                                WritableMap cellInfoMap = Arguments.createMap();
+                                cellInfoMap.putInt("mcc", cellIdentityLte.getMcc());
+                                cellInfoMap.putInt("mnc", cellIdentityLte.getMnc());
+                                cellInfoMap.putInt("ci", cellIdentityLte.getCi());
+                                cellInfoMap.putInt("pci", cellIdentityLte.getPci());
+                                cellInfoMap.putInt("rsrp", signalStrengthLte.getRsrp());
+    
+                                cellInfoArray.pushMap(cellInfoMap);
+                            }
+                        }
+    
+                        cellInfosArray.pushArray(cellInfoArray);
+                    } else {
+                        cellInfosArray.pushNull();
+                    }
+                } catch (Exception e) {
+                    cellInfosArray.pushNull();
+                }
+            }
+    
+            promise.resolve(cellInfosArray);
+        } catch (Exception e) {
+            promise.reject("CELL_INFO_ERROR", e.getMessage());
+        }
+    }
+    
 
 @ReactMethod
-public void getNetworkInfo(Promise promise) {
+public void getNetworkInfos(Promise promise) {
     try {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            // Check for necessary permissions
-            if (reactContext.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+        int simCount = telephonyManager.getPhoneCount();
+        WritableArray networkInfos = Arguments.createArray();
+
+        for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+            try {
+                TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
+
                 WritableMap networkInfo = Arguments.createMap();
 
                 // Retrieve PLMN (Network Operator Name)
-                networkInfo.putString("plmn", telephonyManager.getNetworkOperatorName());
+                networkInfo.putString("plmn", telephonyManagerForSlot.getNetworkOperatorName());
 
                 // Retrieve Operator Name (Network Operator)
-                networkInfo.putString("operator", telephonyManager.getNetworkOperator());
+                networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperator());
 
                 // Retrieve Cell Connection Status
-                networkInfo.putBoolean("connected", telephonyManager.getCallState() == TelephonyManager.CALL_STATE_IDLE);
+                networkInfo.putBoolean("connected", telephonyManagerForSlot.getCallState() == TelephonyManager.CALL_STATE_IDLE);
 
                 // Retrieve Roaming status
-                networkInfo.putBoolean("roaming", telephonyManager.isNetworkRoaming());
+                networkInfo.putBoolean("roaming", telephonyManagerForSlot.isNetworkRoaming());
 
                 // Retrieve ASU (Arbitrary Strength Unit) level
                 int asuLevel = -1;
-                List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
+                List<CellInfo> cellInfoList = telephonyManagerForSlot.getAllCellInfo();
 
                 if (cellInfoList != null && !cellInfoList.isEmpty()) {
                     CellInfo primaryCellInfo = cellInfoList.get(0); // Assuming primary cell
@@ -167,8 +252,8 @@ public void getNetworkInfo(Promise promise) {
                 int band = -1;
                 int dbm = -1;
 
-                if (telephonyManager.getDataNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
-                    CellInfo cellInfo = telephonyManager.getAllCellInfo().get(0);
+                if (telephonyManagerForSlot.getDataNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
+                    CellInfo cellInfo = telephonyManagerForSlot.getAllCellInfo().get(0);
                     if (cellInfo instanceof CellInfoLte) {
                         CellIdentityLte cellIdentityLte = ((CellInfoLte) cellInfo).getCellIdentity();
                         CellSignalStrengthLte signalStrengthLte = ((CellInfoLte) cellInfo).getCellSignalStrength();
@@ -183,77 +268,154 @@ public void getNetworkInfo(Promise promise) {
                 networkInfo.putInt("band", band);
                 networkInfo.putInt("dbm", dbm);
 
-                promise.resolve(networkInfo);
-            } else {
-                promise.reject("PERMISSION_DENIED", "READ_PHONE_STATE permission is required.");
+                networkInfos.pushMap(networkInfo);
+            } catch (Exception e) {
+                networkInfos.pushNull();
             }
-        } else {
-            promise.reject("API_LEVEL_NOT_SUPPORTED", "API level not supported.");
         }
+
+        promise.resolve(networkInfos);
     } catch (Exception e) {
         promise.reject("NETWORK_INFO_ERROR", e.getMessage());
     }
 }
 
 
-    @ReactMethod
-    public void getLAC(Promise promise) {
-        try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                // Check for necessary permissions
-                if (reactContext.checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
-                    int lac = -1; // Default value if not available
+@ReactMethod
+public void getSimState(Promise promise) {
+    try {
+        int simCount = telephonyManager.getPhoneCount();
+        WritableArray simStates = Arguments.createArray();
 
-                    // Retrieve LAC (Location Area Code) for LTE
-                    if (telephonyManager.getDataNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
-                        CellInfo cellInfo = telephonyManager.getAllCellInfo().get(0);
-                        if (cellInfo instanceof CellInfoLte) {
-                            CellIdentityLte cellIdentityLte = ((CellInfoLte) cellInfo).getCellIdentity();
-                            lac = cellIdentityLte.getTac();
-                        }
-                    }
-
-                    promise.resolve(lac);
-                } else {
-                    promise.reject("PERMISSION_DENIED", "READ_PHONE_STATE permission is required.");
-                }
-            } else {
-                promise.reject("API_LEVEL_NOT_SUPPORTED", "API level not supported.");
+        for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+            try {
+                int simState = telephonyManager.getSimState(subscriptionId);
+                simStates.pushInt(simState);
+            } catch (Exception e) {
+                simStates.pushNull();
             }
-        } catch (Exception e) {
-            promise.reject("LAC_ERROR", e.getMessage());
         }
+
+        promise.resolve(simStates);
+    } catch (Exception e) {
+        promise.reject("SIM_STATE_ERROR", e.getMessage());
     }
+}
 
 @ReactMethod
-    public void getSimState(Promise promise) {
-        try {
-            int simState = telephonyManager.getSimState();
-            promise.resolve(simState);
-        } catch (Exception e) {
-            promise.reject("SIM_STATE_ERROR", e.getMessage());
-        }
-    }
+public void getCallStates(Promise promise) {
+    try {
+        int simCount = telephonyManager.getPhoneCount();
+        WritableArray callStates = Arguments.createArray();
 
-    @ReactMethod
-    public void getCallState(Promise promise) {
-        try {
-            int callState = telephonyManager.getCallState();
-            promise.resolve(callState);
-        } catch (Exception e) {
-            promise.reject("CALL_STATE_ERROR", e.getMessage());
+        for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+            try {
+                TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
+                int callState = telephonyManagerForSlot.getCallState();
+                callStates.pushInt(callState);
+            } catch (Exception e) {
+                callStates.pushNull();
+            }
         }
-    }
 
-    @ReactMethod
-    public void getPhoneType(Promise promise) {
-        try {
-            int phoneType = telephonyManager.getPhoneType();
-            promise.resolve(phoneType);
-        } catch (Exception e) {
-            promise.reject("PHONE_TYPE_ERROR", e.getMessage());
-        }
+        promise.resolve(callStates);
+    } catch (Exception e) {
+        promise.reject("CALL_STATE_ERROR", e.getMessage());
     }
+}
+
+@ReactMethod
+public void getPhoneTypes(Promise promise) {
+    try {
+        int simCount = telephonyManager.getPhoneCount();
+        WritableArray phoneTypes = Arguments.createArray();
+
+        for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+            try {
+                TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
+                int phoneType = telephonyManagerForSlot.getPhoneType();
+                phoneTypes.pushInt(phoneType);
+            } catch (Exception e) {
+                phoneTypes.pushNull();
+            }
+        }
+
+        promise.resolve(phoneTypes);
+    } catch (Exception e) {
+        promise.reject("PHONE_TYPE_ERROR", e.getMessage());
+    }
+}
+
+
+@ReactMethod
+public void measureUploadSpeed(String url, String data, Promise promise) {
+    OkHttpClient client = new OkHttpClient();
+
+    // Convert the data to a request body
+    RequestBody requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), data);
+
+    Request request = new Request.Builder().url(url).post(requestBody).build();
+
+    try {
+        long startTime = System.currentTimeMillis();
+        Response response = client.newCall(request).execute();
+        long endTime = System.currentTimeMillis();
+        long uploadTime = endTime - startTime;
+
+        if (uploadTime > 0) {
+            // Calculate upload speed in Mbps
+            double uploadSpeedMbps = (data.length() / 1024) / (uploadTime / 1000); // Convert to Mbps
+            promise.resolve(uploadSpeedMbps);
+        } else {
+            promise.reject("UPLOAD_SPEED_ERROR", "Upload speed measurement failed");
+        }
+    } catch (IOException e) {
+        promise.reject("UPLOAD_SPEED_ERROR", e.getMessage());
+    }
+}
+
+@ReactMethod
+public void measureDownloadSpeed(String url, Promise promise) {
+    OkHttpClient client = new OkHttpClient();
+    Request request = new Request.Builder().url(url).build();
+
+    try {
+        Response response = client.newCall(request).execute();
+        long fileSize = response.body().contentLength();
+        long startTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis();
+        long downloadTime = endTime - startTime;
+
+        if (downloadTime > 0) {
+            double downloadSpeedMbps = (fileSize / 1024) / (downloadTime / 1000); // Convert to Mbps
+            promise.resolve(downloadSpeedMbps);
+        } else {
+            promise.reject("DOWNLOAD_SPEED_ERROR", "Download speed measurement failed");
+        }
+    } catch (IOException e) {
+        promise.reject("DOWNLOAD_SPEED_ERROR", e.getMessage());
+    }
+}
+
+@ReactMethod
+public void measureLatency(String host, Promise promise) {
+    try {
+        InetAddress address = InetAddress.getByName(host);
+        long startTime = System.currentTimeMillis();
+        if (address.isReachable(5000)) { // Timeout in milliseconds
+            long endTime = System.currentTimeMillis();
+            long latency = endTime - startTime;
+            promise.resolve(latency);
+        } else {
+            promise.reject("LATENCY_ERROR", "Host is not reachable");
+        }
+    } catch (UnknownHostException e) {
+        promise.reject("LATENCY_ERROR", e.getMessage());
+    } catch (IOException e) {
+        promise.reject("LATENCY_ERROR", e.getMessage());
+    }
+}
+
 
   @Override
   public String getName() {

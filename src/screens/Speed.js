@@ -6,7 +6,6 @@ import {
   SafeAreaView,
   ScrollView,
   StatusBar,
-  TouchableWithoutFeedback,
   View,
   NativeModules,
 } from 'react-native';
@@ -22,55 +21,7 @@ class Speed extends React.Component {
     this.state = {};
   }
 
-  componentDidMount = async () => {
-    RadioParameters.getSignalStrength()
-      .then(signalStrength => {
-        console.log('Signal Strength:', signalStrength);
-      })
-      .catch(error => {
-        console.error('Error retrieving signal strength:', error);
-      });
-
-    RadioParameters.getNetworkType()
-      .then(networkType => {
-        console.log('Network Type:', networkType);
-      })
-      .catch(error => {
-        if (error === 'PERMISSION_DENIED') {
-          console.log('Permission denied. Handle accordingly.');
-        } else {
-          console.log('Error retrieving network type:', error);
-        }
-      });
-
-    RadioParameters.getTAC()
-      .then(tac => {
-        console.log('TAC (Tracking Area Code):', tac);
-      })
-      .catch(error => {
-        console.error('Error retrieving TAC:', error);
-      });
-
-    RadioParameters.getCellInfo()
-      .then(data => {
-        console.log('Cell Info', data);
-      })
-      .catch(err => console.log(err));
-
-    RadioParameters.getNetworkInfo()
-      .then(data => {
-        console.log('Network Info', data);
-      })
-      .catch(err => console.log(err));
-
-    RadioParameters.getLAC()
-      .then(lac => {
-        console.log('LAC (Location Area Code):', lac);
-      })
-      .catch(error => {
-        console.error('Error retrieving LAC:', error);
-      });
-  };
+  componentDidMount = async () => {};
 
   start = () => {
     this.setState({started: true, did_start: true});
