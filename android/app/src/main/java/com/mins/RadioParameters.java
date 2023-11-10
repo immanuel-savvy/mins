@@ -291,14 +291,8 @@ public void getSignalStrength(Promise promise) {
     
                         asuLevel = getAsuLevel(primaryCellInfo);
                         // Common information for all network types
-                        
                     }
                     networkInfo.putInt("asu", asuLevel);
-    
-                    
-                    // networkInfo.putInt("cellIdentity", cellIdentity);
-                    // networkInfo.putInt("band", band);
-                    // networkInfo.putInt("dbm", dbm);
     
                     networkInfos.pushMap(networkInfo);
                 } catch (Exception e) {
@@ -320,7 +314,6 @@ private WritableMap getGsmCellInfoMap(CellInfoGsm cellInfoGsm) {
     CellIdentityGsm cellIdentityGsm = cellInfoGsm.getCellIdentity();
     CellSignalStrengthGsm signalStrengthGsm = cellInfoGsm.getCellSignalStrength();
 
-    cellInfoMap.putInt("networkType", TelephonyManager.NETWORK_TYPE_GSM);
     cellInfoMap.putInt("mcc", cellIdentityGsm.getMcc());
     cellInfoMap.putInt("mnc", cellIdentityGsm.getMnc());
     cellInfoMap.putInt("cellIdentity", cellIdentityGsm.getCid());
@@ -381,9 +374,7 @@ private WritableMap getLteCellInfoMap(CellInfoLte cellInfoLte) {
     return cellInfoMap;
 }
 
-
-
-// Modify getCellInfoMap method to handle GSM and WCDMA
+// Modify getCellInfoMap method to handle GSM, CDMA, WCDMA and LTE
 private WritableMap getCellInfoMap(CellInfo cellInfo) {
     if (cellInfo instanceof CellInfoLte) {
         return getLteCellInfoMap((CellInfoLte) cellInfo);
@@ -423,78 +414,6 @@ private CellInfo getCellInfoForNetworkType(TelephonyManager telephonyManager) {
     }
     return null;
 }
-
-    
-
-// @ReactMethod
-// public void getNetworkInfos(Promise promise) {
-//     try {
-//         int simCount = telephonyManager.getPhoneCount();
-//         WritableArray networkInfos = Arguments.createArray();
-
-//         for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
-//             try {
-//                 TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
-
-//                 WritableMap networkInfo = Arguments.createMap();
-
-//                 // Retrieve PLMN (Network Operator)
-//                 networkInfo.putString("plmn", telephonyManagerForSlot.getNetworkOperator());
-
-//                 // Retrieve Operator Name (Network Operator)
-//                 networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperatorName());
-
-//                 // Retrieve Cell Connection Status
-//                 networkInfo.putBoolean("connected", telephonyManagerForSlot.getCallState() == TelephonyManager.CALL_STATE_IDLE);
-
-//                 // Retrieve Roaming status
-//                 networkInfo.putBoolean("roaming", telephonyManagerForSlot.isNetworkRoaming());
-
-//                 // Retrieve ASU (Arbitrary Strength Unit) level
-//                 int asuLevel = -1;
-//                 List<CellInfo> cellInfoList = telephonyManagerForSlot.getAllCellInfo();
-
-//                 if (cellInfoList != null && !cellInfoList.isEmpty()) {
-//                     CellInfo primaryCellInfo = cellInfoList.get(0); // Assuming primary cell
-//                     if (primaryCellInfo instanceof CellInfoLte) {
-//                         asuLevel = ((CellInfoLte) primaryCellInfo).getCellSignalStrength().getAsuLevel();
-//                     }
-//                 }
-
-//                 networkInfo.putInt("asu", asuLevel);
-
-//                 // Retrieve Cell Identity (CID)
-//                 int cellIdentity = -1;
-//                 int band = -1;
-//                 int dbm = -1;
-
-//                 if (telephonyManagerForSlot.getDataNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
-//                     CellInfo cellInfo = telephonyManagerForSlot.getAllCellInfo().get(0);
-//                     if (cellInfo instanceof CellInfoLte) {
-//                         CellIdentityLte cellIdentityLte = ((CellInfoLte) cellInfo).getCellIdentity();
-//                         CellSignalStrengthLte signalStrengthLte = ((CellInfoLte) cellInfo).getCellSignalStrength();
-
-//                         cellIdentity = cellIdentityLte.getCi();
-//                         band = cellIdentityLte.getEarfcn();
-//                         dbm = signalStrengthLte.getDbm();
-//                     }
-//                 }
-
-//                 networkInfo.putInt("cellIdentity", cellIdentity);
-//                 networkInfo.putInt("band", band);
-//                 networkInfo.putInt("dbm", dbm);
-
-//                 networkInfos.pushMap(networkInfo);
-//             } catch (Exception e) {
-//                 networkInfos.pushNull();
-//             }
-//         }
-
-//         promise.resolve(networkInfos);
-//     } catch (Exception e) {
-//         promise.reject("NETWORK_INFO_ERROR", e.getMessage());
-//     }
-// }
 
 
 @ReactMethod
