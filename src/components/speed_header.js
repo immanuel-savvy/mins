@@ -4,6 +4,7 @@ import {wp} from '../utils/dimensions';
 import Fr_text from './fr_text';
 import Icon from './icon';
 import {App_data} from '../../Contexts';
+import {net_type} from '../screens/Speed';
 
 class Speed_header extends React.Component {
   constructor(props) {
@@ -19,6 +20,7 @@ class Speed_header extends React.Component {
       <App_data.Consumer>
         {({netinfo, location, isp}) => {
           netinfo = netinfo ? {...netinfo, ...isp} : netinfo;
+
           return (
             <Bg_view
               no_bg
@@ -57,13 +59,12 @@ class Speed_header extends React.Component {
                         ``}
                   </Fr_text>
                   <Fr_text style={{color: '#fff', fontSize: 18}}>
-                    {netinfo?.details?.cellularGeneration.toUpperCase() ||
-                      netinfo?.details?.ssid}
+                    {net_type(netinfo)}
                   </Fr_text>
                   <Fr_text
                     numberOfLines={1}
                     style={{color: '#fff', fontSize: 18}}>
-                    {location
+                    {location?.locality
                       ? `${location.locality}, ${location.city}`
                       : '...'}
                   </Fr_text>

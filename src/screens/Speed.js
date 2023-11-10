@@ -2,17 +2,54 @@ import React from 'react';
 import Bg_view from '../components/bg_view';
 import Fr_text from '../components/fr_text';
 import {hp, wp} from '../utils/dimensions';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  View,
-  NativeModules,
-} from 'react-native';
+import {SafeAreaView, ScrollView, StatusBar} from 'react-native';
 import Speed_header from '../components/speed_header';
 import Speed_stats from '../components/speed_stats';
 
-const {RadioParameters} = NativeModules;
+const measureDownloadSpeed = async url => {
+  try {
+    const startTime = Date.now();
+    let response = await fetch(url);
+    let data = await response.text();
+
+    const endTime = Date.now();
+
+    if (data.length) {
+      const fileSize = Number(data.length);
+      let dur = endTime - startTime;
+      if (!isNaN(fileSize) && dur > 0) {
+        const downloadSpeedMbps = fileSize / 1024 ** 2 / (dur / 1000); // Convert to Mbps
+        return downloadSpeedMbps;
+      } else {
+        throw new Error('Invalid file size or time measurement');
+      }
+    } else {
+      throw new Error(`HTTP request failed with status: ${response.status}`);
+    }
+  } catch (error) {
+    throw new Error(`Download speed measurement failed: ${error.message}`);
+  }
+};
+
+const net_type = (netinfo, linkspeed, suff = '') => {
+  let nettype = '';
+  if (netinfo) {
+    if (netinfo.type === 'wifi')
+      nettype = `${
+        linkspeed
+          ? `${netinfo.details.linkSpeed} ${suff}`.trim()
+          : netinfo.details.ssid
+      }`;
+    else {
+      if (netinfo?.radio) {
+        let s1 = netinfo.radio['Sim 1'];
+        nettype = s1.NetworkType;
+      } else nettype = netinfo?.details?.cellularGeneration?.toUpperCase();
+    }
+  }
+
+  return nettype;
+};
 
 class Speed extends React.Component {
   constructor(props) {
@@ -71,3 +108,4 @@ class Speed extends React.Component {
 }
 
 export default Speed;
+export {measureDownloadSpeed, net_type};

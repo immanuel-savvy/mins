@@ -1,16 +1,19 @@
 import React from 'react';
 import Bg_view from './bg_view';
 import Fr_text from './fr_text';
-import Ping from 'react-native-ping';
 import {hp, wp} from '../utils/dimensions';
 import RNSpeedometer from 'react-native-speedometer';
 import {CountUp} from 'use-count-up';
-import Text_btn from './text_btn';
-import {TouchableWithoutFeedback, View} from 'react-native';
-import {emitter} from '../../Mins';
+import {TouchableWithoutFeedback, View, NativeModules} from 'react-native';
+import {Server, emitter} from '../../Mins';
 import {App_data} from '../../Contexts';
 import {labels} from '../utils/speedo_labels';
-import {bps_to_mbps} from '../utils/functions';
+import toast from '../utils/toast';
+import {measureDownloadSpeed} from '../screens/Speed';
+
+const {RadioParameters} = NativeModules;
+
+const _3mb = '0'.repeat(3 * 1024);
 
 class Speed_stats extends React.Component {
   constructor(props) {
@@ -28,59 +31,79 @@ class Speed_stats extends React.Component {
       ? {...this.state.traffic_stats}
       : null;
     this.setState(
-      {did_start: true, starting: true, traffic_stats: null},
+      {
+        did_start: true,
+        starting: true,
+        download_speed: null,
+        upload_speed: null,
+        latency: null,
+        current: null,
+        traffic_stats: null,
+      },
       async () => {
-        this.refresh_network();
-        let latency;
+        await this.refresh_network();
 
-        try {
-          const ms = await Ping.start('8.8.8.8', {timeout: 1000});
+        if (this.offline) {
+          this.setState({starting: false});
 
-          latency = ms / 2;
-          this.prev_latency = latency;
-        } catch (error) {
-          console.log('special code', error.code, error.message);
-          latency = this.prev_latency;
+          return toast('You are offline!');
         }
 
-        const value = await Ping.getTrafficStats('8.8.8.8');
+        let latency,
+          download_speed,
+          upload_speed,
+          traffic_stats = new Object();
 
-        let {
-          receivedNetworkSpeed,
-          sendNetworkSpeed,
-          receivedNetworkTotal,
-          sendNetworkTotal,
-        } = value;
+        try {
+          latency =
+            Number(
+              (
+                (await RadioParameters.measureLatency('mins.giitafrica.com')) *
+                1000
+              ).toFixed(2),
+            ) || 0;
 
-        let traffic_stats = {
-          receivedNetworkSpeed: parseInt(receivedNetworkSpeed, 10),
-          sendNetworkSpeed: parseInt(sendNetworkSpeed, 10),
-          receivedNetworkTotal: parseInt(receivedNetworkTotal, 10),
-          sendNetworkTotal: parseInt(sendNetworkTotal, 10),
-        };
+          traffic_stats.latency = latency;
+          this.prev_latency = latency;
+          this.setState({latency, current: latency});
+        } catch (e) {
+          latency = this.prev_latency || 0;
+        }
 
-        if (
-          !traffic_stats.receivedNetworkSpeed ||
-          !traffic_stats.sendNetworkSpeed ||
-          !traffic_stats.receivedNetworkTotal ||
-          !traffic_stats.sendNetworkTotal
-        ) {
+        try {
+          const url = 'http://mins.giitafrica.com/download_speed';
+          download_speed = Number((await measureDownloadSpeed(url)).toFixed(2));
+
+          traffic_stats.download_speed = download_speed || 0;
+          this.setState({download_speed, current: download_speed});
+        } catch (e) {
+          console.log(e.message, 'Download test failed');
+        }
+
+        try {
+          upload_speed = Number(
+            (
+              await RadioParameters.measureUploadSpeed(
+                `${Server}/upload_speed`,
+                _3mb,
+              )
+            ).toFixed(2),
+          );
+          traffic_stats.upload_speed = upload_speed || 0;
+          this.setState({upload_speed, current: upload_speed});
+        } catch (e) {
+          console.log(e.message, 'Upload test failed');
+        }
+
+        // console.log(traffic_stats, 'YOOOO');
+        if (!traffic_stats.upload_speed || !traffic_stats.download_speed) {
           return this.begin_measure();
         } else this.previous_stats = traffic_stats;
 
-        traffic_stats.latency = Number(
-          (
-            latency ||
-            (traffic_stats.receivedNetworkTotal * 1024 * 1024) /
-              traffic_stats.receivedNetworkSpeed /
-              1000
-          ).toFixed(2),
-        );
-
         this.setState(
           {
-            traffic_stats,
             starting: false,
+            traffic_stats,
           },
           () => emitter.emit('new_test', traffic_stats),
         );
@@ -90,11 +113,13 @@ class Speed_stats extends React.Component {
 
   render() {
     let {start} = this.props;
-    let {did_start, traffic_stats, starting} = this.state;
+    let {did_start, download_speed, upload_speed, latency, current, starting} =
+      this.state;
 
     return (
       <App_data.Consumer>
-        {({refresh_network}) => {
+        {({refresh_network, offline}) => {
+          this.offline = offline;
           this.refresh_network = refresh_network;
 
           return (
@@ -110,13 +135,10 @@ class Speed_stats extends React.Component {
                     </Fr_text>
 
                     <Fr_text style={{fontSize: 30}} bold accent>
-                      {traffic_stats ? (
+                      {download_speed ? (
                         <CountUp
-                          isCounting={!!traffic_stats}
-                          end={
-                            bps_to_mbps(traffic_stats?.receivedNetworkSpeed) ||
-                            0
-                          }
+                          isCounting={!!download_speed}
+                          end={download_speed || 0}
                           duration={3.2}
                         />
                       ) : (
@@ -132,12 +154,10 @@ class Speed_stats extends React.Component {
                       Upload
                     </Fr_text>
                     <Fr_text style={{fontSize: 30}} bold accent>
-                      {traffic_stats ? (
+                      {upload_speed ? (
                         <CountUp
-                          isCounting={!!traffic_stats}
-                          end={
-                            bps_to_mbps(traffic_stats?.sendNetworkSpeed) || 0
-                          }
+                          isCounting={!!upload_speed}
+                          end={upload_speed || 0}
                           duration={3.2}
                         />
                       ) : (
@@ -153,10 +173,10 @@ class Speed_stats extends React.Component {
                       Latency
                     </Fr_text>
                     <Fr_text style={{fontSize: 30}} bold accent>
-                      {traffic_stats ? (
+                      {latency ? (
                         <CountUp
-                          isCounting={!!traffic_stats}
-                          end={traffic_stats?.latency || 0}
+                          isCounting={!!latency}
+                          end={latency || 0}
                           duration={3.2}
                         />
                       ) : (
@@ -169,7 +189,7 @@ class Speed_stats extends React.Component {
               )}
 
               <Bg_view style={{minHeight: hp(did_start ? 40 : 15)}} no_bg>
-                {traffic_stats ? (
+                {starting ? (
                   <>
                     <Bg_view
                       style={{alignSelf: 'center', marginTop: hp(10)}}
@@ -177,15 +197,11 @@ class Speed_stats extends React.Component {
                       <Bg_view no_bg>
                         <RNSpeedometer
                           labels={labels}
-                          value={
-                            (bps_to_mbps(traffic_stats.receivedNetworkSpeed) +
-                              bps_to_mbps(traffic_stats.sendNetworkSpeed)) /
-                            2
-                          }
+                          value={current || 0}
                           labelStyle={{color: '#f9f059'}}
                           defaultValue={0}
                           size={wp(75)}
-                          maxValue={75}
+                          maxValue={500}
                           allowedDecimals={2}
                         />
                       </Bg_view>
@@ -232,17 +248,6 @@ class Speed_stats extends React.Component {
                   </Bg_view>
                 )}
               </Bg_view>
-              {did_start && traffic_stats ? (
-                <Bg_view style={{alignItems: 'center', marginTop: hp(2)}} no_bg>
-                  <Text_btn
-                    text="Run again!"
-                    accent
-                    bold
-                    action={this.begin_measure}
-                    centralise
-                  />
-                </Bg_view>
-              ) : null}
             </Bg_view>
           );
         }}

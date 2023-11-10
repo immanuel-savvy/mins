@@ -8,6 +8,7 @@ import {
   camel_case_to_human_case,
   date_string,
   flatten_object,
+  time_string,
 } from '../utils/functions';
 import Fr_text from './fr_text';
 import Feather from 'react-native-vector-icons/Feather';
@@ -20,7 +21,8 @@ class Net_details extends React.Component {
     let net_array = flatten_object(net);
     net_array = net_array.map(n => {
       if (typeof n[1] == 'boolean') n[1] = String(n[1]);
-      if (n[0] == 'timestamp') n[1] = date_string(n[1]);
+      if (n[0] == 'timestamp')
+        n[1] = `${date_string(n[1])}, ${time_string(n[1], true)}`;
       else if (['sendNetworkSpeed', 'receivedNetworkSpeed'].includes(n[0]))
         n[1] = `${bps_to_mbps(n[1])} Mbps`;
       else if (['receivedNetworkTotal', 'sendNetworkTotal'].includes(n[0]))

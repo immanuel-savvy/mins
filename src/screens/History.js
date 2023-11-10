@@ -19,6 +19,7 @@ import Confirm_clear_history from '../components/confirm_clear_history';
 import List_empty from '../components/listempty';
 import {bps_to_mbps, date_string} from '../utils/functions';
 import Net_details from '../components/net_details';
+import {net_type} from './Speed';
 
 class History extends React.Component {
   constructor(props) {
@@ -156,12 +157,7 @@ class History extends React.Component {
                                   {`${
                                     net.netinfo?.details?.carrier ||
                                     net.netinfo?.details?.ssid
-                                  } (${
-                                    net.netinfo?.details?.cellularGeneration?.toUpperCase() ||
-                                    `${
-                                      net.netinfo?.details?.linkSpeed || '-'
-                                    } Mbps`
-                                  })`}
+                                  } (${net_type(net.netinfo, true, 'Mbps')})`}
                                 </Fr_text>
                               </Bg_view>
 
@@ -185,7 +181,7 @@ class History extends React.Component {
                                   paddingLeft: wp(1.4),
                                 }}>
                                 <Fr_text size={wp(4)} centralise>
-                                  {`${net.latency.toFixed(2)} ms`}
+                                  {`${net.latency || '-'} ms`}
                                 </Fr_text>
                               </Bg_view>
 
@@ -197,7 +193,7 @@ class History extends React.Component {
                                   paddingLeft: wp(1.4),
                                 }}>
                                 <Fr_text size={wp(4)} centralise>
-                                  {bps_to_mbps(net?.receivedNetworkSpeed)}
+                                  {net?.download_speed}
                                 </Fr_text>
                               </Bg_view>
 
@@ -209,7 +205,7 @@ class History extends React.Component {
                                   paddingLeft: wp(1.4),
                                 }}>
                                 <Fr_text size={wp(4)} centralise>
-                                  {bps_to_mbps(net?.sendNetworkSpeed)}
+                                  {net?.upload_speed}
                                 </Fr_text>
                               </Bg_view>
                             </Bg_view>

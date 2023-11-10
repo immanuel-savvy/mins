@@ -11,27 +11,31 @@ app.use(bodyParser.json({limit: '100mb'}));
 
 app.get('/', (req, res) => res.send('<div><h1>Hi, its Mins.</h1></div>'));
 
+const _3mb = '0'.repeat(1024 * 1024 * 3);
+
+app.get('/download_speed', (req, res) => {
+  res.header('Content-Type', 'text/plain').send(_3mb);
+});
+
+app.post('/upload_speed', (req, res) => {
+  res.end();
+});
+
 app.post('/aggregate_network', (req, res) => {
   let {test} = req.body;
 
   let network = AREA_NETWORKS.readone({area: test.area, isp: test.isp});
   if (network) {
-    if (network.test.receivedNetworkSpeed < test.receivedNetworkSpeed)
-      network.test.receivedNetworkSpeed = test.receivedNetworkSpeed;
-    if (network.test.receivedNetworkTotal < test.receivedNetworkTotal)
-      network.test.receivedNetworkTotal = test.receivedNetworkTotal;
-    if (network.test.sendNetworkSpeed < test.sendNetworkSpeed)
-      network.test.sendNetworkSpeed = test.sendNetworkSpeed;
-    if (network.test.sendNetworkTotal < test.sendNetworkTotal)
-      network.test.sendNetworkTotal = test.sendNetworkTotal;
+    if (network.test.download_speed < test.download_speed)
+      network.test.download_speed = test.download_speed;
+    if (network.test.upload_speed < test.upload_speed)
+      network.test.upload_speed = test.upload_speed;
     if (network.test.latency > test.latency)
       network.test.latency = test.latency;
 
     TESTS.update(network.test._id, {
-      receivedNetworkSpeed: network.test.receivedNetworkSpeed,
-      receivedNetworkTotal: network.test.receivedNetworkTotal,
-      sendNetworkSpeed: network.test.sendNetworkSpeed,
-      sendNetworkTotal: network.test.sendNetworkTotal,
+      download_speed: network.test.download_speed,
+      upload_speed: network.test.upload_speed,
       latency: network.test.latency,
     });
     test = network.test;

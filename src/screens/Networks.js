@@ -7,6 +7,7 @@ import {ActivityIndicator, ScrollView, StatusBar} from 'react-native';
 import {App_data, Networks_data} from '../../Contexts';
 import List_empty from '../components/listempty';
 import {bps_to_mbps} from '../utils/functions';
+import {net_type} from './Speed';
 
 class Networks extends React.Component {
   constructor(props) {
@@ -97,7 +98,6 @@ class Networks extends React.Component {
                           </Bg_view>
                         ) : networks.length ? (
                           networks.map((net, j) => {
-                            console.log(JSON.stringify(net, null, 2));
                             return (
                               <Bg_view
                                 horizontal
@@ -115,12 +115,10 @@ class Networks extends React.Component {
                                   flex
                                   style={{alignItems: 'center'}}>
                                   <Fr_text size={wp(4.5)}>
-                                    {`${net.isp?.split(' ')[0]} (${
-                                      net.netinfo?.details?.cellularGeneration?.toUpperCase() ||
-                                      `${
-                                        net.netinfo?.details?.linkSpeed || '-'
-                                      } Mbps`
-                                    })`}
+                                    {`${
+                                      net.netinfo?.details?.carrier ||
+                                      net.netinfo?.details?.ssid
+                                    } (${net_type(net.netinfo, true, 'Mbps')})`}
                                   </Fr_text>
                                 </Bg_view>
                                 <Bg_view
@@ -128,7 +126,7 @@ class Networks extends React.Component {
                                   flex
                                   style={{alignItems: 'center'}}>
                                   <Fr_text size={wp(4.5)}>
-                                    {bps_to_mbps(net.receivedNetworkSpeed)}
+                                    {net.download_speed}
                                   </Fr_text>
                                 </Bg_view>
                                 <Bg_view
@@ -136,7 +134,7 @@ class Networks extends React.Component {
                                   flex
                                   style={{alignItems: 'center'}}>
                                   <Fr_text size={wp(4.5)}>
-                                    {bps_to_mbps(net.sendNetworkSpeed)}
+                                    {net.upload_speed}
                                   </Fr_text>
                                 </Bg_view>
                                 <Bg_view

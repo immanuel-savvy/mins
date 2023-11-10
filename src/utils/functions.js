@@ -99,13 +99,18 @@ const date_string = timestamp => {
   )} ${date.getFullYear()}`;
 };
 
-const time_string = timestamp => {
+const time_string = (timestamp, seconds) => {
   let date = new Date(timestamp);
 
-  return `${date.getHours().toString().padStart(2, '0')}:${date
+  let value = `${date.getHours().toString().padStart(2, '0')}:${date
     .getMinutes()
     .toString()
     .padStart(2, '0')}`;
+
+  if (seconds)
+    value = `${value}:${date.getSeconds().toString().padStart(2, '0')}`;
+
+  return value;
 };
 
 let phone_regex =
@@ -214,12 +219,7 @@ const copy_object = object => {
   let new_object = {...object};
   for (let prop in new_object) {
     let val = new_object[prop];
-    if (
-      Array.isArray(val) &&
-      typeof val[0] === 'object' &&
-      val[0] &&
-      valid_id(val[0]._id)
-    )
+    if (Array.isArray(val) && typeof val[0] === 'object' && val[0])
       new_object[val] = val.map(v => copy_object(v));
     else if (typeof val === 'object' && val) new_object[val] = copy_object(val);
   }

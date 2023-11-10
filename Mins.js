@@ -3,7 +3,12 @@ import 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {SafeAreaView, View, PermissionsAndroid} from 'react-native';
+import {
+  SafeAreaView,
+  View,
+  PermissionsAndroid,
+  NativeModules,
+} from 'react-native';
 import Emitter from 'semitter';
 import NetInfo from '@react-native-community/netinfo';
 import Geolocation from '@react-native-community/geolocation';
@@ -11,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //
 import Splash from './src/screens/Splash';
 import {hp, wp} from './src/utils/dimensions';
-import Speed from './src/screens/Speed';
+import Speed, {net_type} from './src/screens/Speed';
 import Networks from './src/screens/Networks';
 import History from './src/screens/History';
 import Settings from './src/screens/Settings';
@@ -19,6 +24,12 @@ import Icon from './src/components/icon';
 import {App_data, Networks_data, Test_history} from './Contexts';
 import toast from './src/utils/toast';
 import {copy_object} from './src/utils/functions';
+
+const {RadioParameters} = NativeModules;
+
+const Server = false
+  ? 'http://192.168.43.11:3700'
+  : 'http://mins.giitafrica.com';
 
 const emitter = new Emitter();
 
@@ -137,12 +148,130 @@ class App_stack_entry extends React.Component {
   };
 }
 
+function getNetworkTypeName(networkType) {
+  const networkTypes = {
+    1: 'GPRS',
+    2: 'EDGE',
+    3: 'UMTS',
+    4: 'CDMA',
+    5: 'EVDO_0',
+    6: 'EVDO_A',
+    7: '1xRTT',
+    8: 'HSDPA',
+    9: 'HSUPA',
+    10: 'HSPA',
+    11: 'iDen',
+    12: 'EVDO_B',
+    13: 'LTE',
+    14: 'eHRPD',
+    15: 'HSPA+',
+    // Add more network types as needed
+  };
+
+  return networkTypes[networkType] || 'Unknown';
+}
+
+// Function to convert SIM state to text
+function convertSimStateToText(simState) {
+  switch (simState) {
+    case 0:
+      return 'UNKNOWN';
+    case 1:
+      return 'ABSENT';
+    case 2:
+      return 'PIN_REQUIRED';
+    case 3:
+      return 'PUK_REQUIRED';
+    case 4:
+      return 'NETWORK_LOCKED';
+    case 5:
+      return 'READY';
+    default:
+      return 'Unknown';
+  }
+}
+
+// Function to convert phone type to text
+function convertPhoneTypeToText(phoneType) {
+  switch (phoneType) {
+    case 0:
+      return 'NONE';
+    case 1:
+      return 'GSM';
+    case 2:
+      return 'CDMA';
+    case 3:
+      return 'SIP';
+    default:
+      return 'Unknown';
+  }
+}
+
+// Function to convert call state to text
+function convertCallStateToText(callState) {
+  switch (callState) {
+    case 0:
+      return 'IDLE';
+    case 1:
+      return 'RINGING';
+    case 2:
+      return 'OFFHOOK';
+    default:
+      return 'Unknown';
+  }
+}
+
 class Mins extends React.Component {
   constructor(props) {
     super(props);
 
     this.state = {loading: true, networks: new Array(), loaded_networks: false};
   }
+
+  radio_parameters = async () => {
+    let netinfos = await RadioParameters.getNetworkInfos();
+    let networktype = (await RadioParameters.getNetworkType()).map(n =>
+      getNetworkTypeName(n),
+    );
+    let simstate = (await RadioParameters.getSimState()).map(n =>
+      convertSimStateToText(n),
+    );
+    let callstates = (await RadioParameters.getCallStates()).map(n =>
+      convertCallStateToText(n),
+    );
+    let phonetypes = (await RadioParameters.getPhoneTypes()).map(n =>
+      convertPhoneTypeToText(n),
+    );
+    let signalstrength = await RadioParameters.getSignalStrength();
+    let val_arr = [
+      netinfos,
+      callstates,
+      phonetypes,
+      simstate,
+      networktype,
+      signalstrength,
+    ];
+
+    let val_names = [
+      'Net',
+      'CallStates',
+      'PhoneTypes',
+      'SimState',
+      'NetworkType',
+      'SignalStrength',
+    ];
+
+    let sims = new Object();
+    for (let i = 0; i < netinfos.length; i++) {
+      let sim = `Sim ${i + 1}`;
+      if (!sims[sim]) sims[sim] = new Object();
+      val_arr.map((v, k) => {
+        sims[sim][val_names[k]] = v[i];
+      });
+    }
+
+    return sims;
+  };
 
   refresh_network = async () => {
     let {netinfo} = this.state;
@@ -155,16 +284,21 @@ class Mins extends React.Component {
         .then(res => {
           this.setState({isp: res});
         })
-        .catch(e => console.log(e));
+        .catch(e => console.log(e, 'WHYY'));
     }
 
-    this.setState({netinfo});
+    let radio = await this.radio_parameters();
+
+    this.setState({
+      netinfo: {...netinfo, radio},
+      offline: !netinfo.isConnected,
+    });
   };
 
   componentDidMount = async () => {
-    await this.refresh_network();
-
     await this.requestPhoneStatePermission();
+
+    await this.refresh_network();
 
     let get_one_time_location = () => {
       Geolocation.getCurrentPosition(
@@ -282,9 +416,7 @@ class Mins extends React.Component {
   };
 
   get_isp = n => {
-    return `${n.netinfo.isp} ${
-      n.netinfo?.details?.linkSpeed || n.netinfo?.details?.cellularGeneration
-    }`;
+    return `${n.netinfo.isp} ${net_type(n.netinfo, true)}`;
   };
 
   get_net = test => {
@@ -309,10 +441,8 @@ class Mins extends React.Component {
 
     if (has_net) {
       if (
-        my_net.receivedNetworkSpeed > test.receivedNetworkSpeed &&
-        my_net.receivedNetworkTotal > test.receivedNetworkTotal &&
-        my_net.sendNetworkTotal > test.sendNetworkTotal &&
-        my_net.sendNetworkSpeed > test.sendNetworkSpeed &&
+        my_net.download_speed > test.download_speed &&
+        my_net.upload_speed > test.upload_speed &&
         my_net.latency < test.latency
       )
         return;
@@ -320,7 +450,7 @@ class Mins extends React.Component {
 
     test.isp = this.get_isp(test);
     test.area = this.get_area(test);
-    fetch('http://mins.giitafrica.com/aggregate_network', {
+    fetch(`${Server}/aggregate_network`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -353,7 +483,7 @@ class Mins extends React.Component {
     let {location} = this.state;
     if (!location) return this.setState({networks: new Array()});
 
-    fetch('http://mins.giitafrica.com/networks', {
+    fetch(`${Server}/networks`, {
       method: 'post',
       headers: {
         'Content-Type': 'application/json',
@@ -396,8 +526,16 @@ class Mins extends React.Component {
   };
 
   render = () => {
-    let {loading, netinfo, history, isp, location, loaded_networks, networks} =
-      this.state;
+    let {
+      loading,
+      netinfo,
+      offline,
+      history,
+      isp,
+      location,
+      loaded_networks,
+      networks,
+    } = this.state;
 
     return (
       <NavigationContainer>
@@ -410,6 +548,7 @@ class Mins extends React.Component {
                 location,
                 netinfo,
                 isp,
+                offline,
                 refresh_network: this.refresh_network,
               }}>
               <Networks_data.Provider
@@ -434,4 +573,4 @@ class Mins extends React.Component {
 }
 
 export default Mins;
-export {emitter};
+export {emitter, Server};

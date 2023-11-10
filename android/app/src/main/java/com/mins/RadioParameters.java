@@ -20,6 +20,16 @@ import android.telephony.CellInfo;
 import android.telephony.CellInfoLte;
 import android.telephony.CellIdentityLte;
 import android.telephony.CellSignalStrengthLte;
+import android.telephony.CellSignalStrength;
+import android.telephony.CellSignalStrengthWcdma;
+import android.telephony.CellSignalStrengthGsm;
+import android.telephony.CellInfoCdma;
+import android.telephony.CellInfoWcdma;
+import android.telephony.CellInfoGsm;
+import android.telephony.CellIdentityCdma;
+import android.telephony.CellIdentityWcdma;
+import android.telephony.CellIdentityGsm;
+import android.telephony.CellSignalStrengthCdma;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -48,15 +58,28 @@ public class RadioParameters extends ReactContextBaseJavaModule {
    + " and location: " + location);
   }
 
-  @ReactMethod
-  public void getSignalStrength(Promise promise) {
-      try {
-          int signalStrength = telephonyManager.getSignalStrength().getLevel();
-          promise.resolve(signalStrength);
-      } catch (Exception e) {
-          promise.reject("SIGNAL_STRENGTH_ERROR", e.getMessage());
-      }
-  }
+@ReactMethod
+public void getSignalStrength(Promise promise) {
+    try {
+        int simCount = telephonyManager.getPhoneCount();
+        WritableArray signalStrengths = Arguments.createArray();
+
+        for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+            try {
+                TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
+                int signalStrength = telephonyManagerForSlot.getSignalStrength().getLevel();
+                signalStrengths.pushInt(signalStrength);
+            } catch (Exception e) {
+                signalStrengths.pushNull();
+            }
+        }
+
+        promise.resolve(signalStrengths);
+    } catch (Exception e) {
+        promise.reject("SIGNAL_STRENGTH_ERROR", e.getMessage());
+    }
+}
+
 
 @ReactMethod
     public void getNetworkType(Promise promise) {
@@ -208,77 +231,270 @@ public class RadioParameters extends ReactContextBaseJavaModule {
             promise.reject("CELL_INFO_ERROR", e.getMessage());
         }
     }
+
+
+    @ReactMethod
+    public void getNetworkInfos(Promise promise) {
+        try {
+            int simCount = telephonyManager.getPhoneCount();
+            WritableArray networkInfos = Arguments.createArray();
+    
+            for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+                try {
+                    TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
+    
+                    WritableMap networkInfo = Arguments.createMap();
+
+
+                    // Retrieve Cell Identity (CID), Band, and dBm
+                    int cellIdentity = -1;
+                    int band = -1;
+                    int dbm = -1;
+    
+                    CellInfo cellInfo = getCellInfoForNetworkType(telephonyManagerForSlot);
+                    if (cellInfo != null) {
+                        networkInfo = getCellInfoMap((CellInfo) cellInfo);
+                        // if (cellInfo instanceof CellInfoLte) {
+                        //     CellIdentityLte cellIdentityLte = ((CellInfoLte) cellInfo).getCellIdentity();
+                        //     CellSignalStrengthLte signalStrengthLte = ((CellInfoLte) cellInfo).getCellSignalStrength();
+    
+                        //     cellIdentity = cellIdentityLte.getCi();
+                        //     band = cellIdentityLte.getEarfcn();
+                        //     dbm = signalStrengthLte.getDbm();
+                        // } else if (cellInfo instanceof CellInfoGsm) {
+                        //     networkInfo = getGsmCellInfoMap((CellInfoGsm) cellInfo);
+                        // } else if (cellInfo instanceof CellInfoWcdma) {
+                        //     networkInfo = getWcdmaCellInfoMap((CellInfoWcdma) cellInfo);
+                        // }
+                        // Add conditions for other network types if needed
+                    }
+    
+    
+                    // Retrieve PLMN (Network Operator)
+                    networkInfo.putString("plmn", telephonyManagerForSlot.getNetworkOperator());
+    
+                    // Retrieve Operator Name (Network Operator)
+                    networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperatorName());
+    
+                    // Retrieve Cell Connection Status
+                    networkInfo.putBoolean("connected", telephonyManagerForSlot.getCallState() == TelephonyManager.CALL_STATE_IDLE);
+    
+                    // Retrieve Roaming status
+                    networkInfo.putBoolean("roaming", telephonyManagerForSlot.isNetworkRoaming());
+    
+                    // Retrieve ASU (Arbitrary Strength Unit) level
+                    int asuLevel = -1;
+                    List<CellInfo> cellInfoList = telephonyManagerForSlot.getAllCellInfo();
+    
+                    if (cellInfoList != null && !cellInfoList.isEmpty()) {
+                        CellInfo primaryCellInfo = cellInfoList.get(0); // Assuming primary cell
+    
+                        asuLevel = getAsuLevel(primaryCellInfo);
+                        // Common information for all network types
+                        
+                    }
+                    networkInfo.putInt("asu", asuLevel);
+    
+                    
+                    // networkInfo.putInt("cellIdentity", cellIdentity);
+                    // networkInfo.putInt("band", band);
+                    // networkInfo.putInt("dbm", dbm);
+    
+                    networkInfos.pushMap(networkInfo);
+                } catch (Exception e) {
+                    e.printStackTrace(); // Log the exception
+                    networkInfos.pushNull();
+                }
+            }
+    
+            promise.resolve(networkInfos);
+        } catch (Exception e) {
+            promise.reject("NETWORK_INFO_ERROR", e.getMessage());
+        }
+    }
     
 
-@ReactMethod
-public void getNetworkInfos(Promise promise) {
-    try {
-        int simCount = telephonyManager.getPhoneCount();
-        WritableArray networkInfos = Arguments.createArray();
+// Helper method to get WritableMap for GSM CellInfo
+private WritableMap getGsmCellInfoMap(CellInfoGsm cellInfoGsm) {
+    WritableMap cellInfoMap = Arguments.createMap();
+    CellIdentityGsm cellIdentityGsm = cellInfoGsm.getCellIdentity();
+    CellSignalStrengthGsm signalStrengthGsm = cellInfoGsm.getCellSignalStrength();
 
-        for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
-            try {
-                TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
+    cellInfoMap.putInt("networkType", TelephonyManager.NETWORK_TYPE_GSM);
+    cellInfoMap.putInt("mcc", cellIdentityGsm.getMcc());
+    cellInfoMap.putInt("mnc", cellIdentityGsm.getMnc());
+    cellInfoMap.putInt("cellIdentity", cellIdentityGsm.getCid());
+    cellInfoMap.putInt("lac", cellIdentityGsm.getLac());
+    cellInfoMap.putInt("Dbm", signalStrengthGsm.getDbm());
+    cellInfoMap.putInt("signalStrengthLevel", signalStrengthGsm.getLevel());
 
-                WritableMap networkInfo = Arguments.createMap();
-
-                // Retrieve PLMN (Network Operator Name)
-                networkInfo.putString("plmn", telephonyManagerForSlot.getNetworkOperatorName());
-
-                // Retrieve Operator Name (Network Operator)
-                networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperator());
-
-                // Retrieve Cell Connection Status
-                networkInfo.putBoolean("connected", telephonyManagerForSlot.getCallState() == TelephonyManager.CALL_STATE_IDLE);
-
-                // Retrieve Roaming status
-                networkInfo.putBoolean("roaming", telephonyManagerForSlot.isNetworkRoaming());
-
-                // Retrieve ASU (Arbitrary Strength Unit) level
-                int asuLevel = -1;
-                List<CellInfo> cellInfoList = telephonyManagerForSlot.getAllCellInfo();
-
-                if (cellInfoList != null && !cellInfoList.isEmpty()) {
-                    CellInfo primaryCellInfo = cellInfoList.get(0); // Assuming primary cell
-                    if (primaryCellInfo instanceof CellInfoLte) {
-                        asuLevel = ((CellInfoLte) primaryCellInfo).getCellSignalStrength().getAsuLevel();
-                    }
-                }
-
-                networkInfo.putInt("asu", asuLevel);
-
-                // Retrieve Cell Identity (CID)
-                int cellIdentity = -1;
-                int band = -1;
-                int dbm = -1;
-
-                if (telephonyManagerForSlot.getDataNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
-                    CellInfo cellInfo = telephonyManagerForSlot.getAllCellInfo().get(0);
-                    if (cellInfo instanceof CellInfoLte) {
-                        CellIdentityLte cellIdentityLte = ((CellInfoLte) cellInfo).getCellIdentity();
-                        CellSignalStrengthLte signalStrengthLte = ((CellInfoLte) cellInfo).getCellSignalStrength();
-
-                        cellIdentity = cellIdentityLte.getCi();
-                        band = cellIdentityLte.getEarfcn();
-                        dbm = signalStrengthLte.getDbm();
-                    }
-                }
-
-                networkInfo.putInt("cellIdentity", cellIdentity);
-                networkInfo.putInt("band", band);
-                networkInfo.putInt("dbm", dbm);
-
-                networkInfos.pushMap(networkInfo);
-            } catch (Exception e) {
-                networkInfos.pushNull();
-            }
-        }
-
-        promise.resolve(networkInfos);
-    } catch (Exception e) {
-        promise.reject("NETWORK_INFO_ERROR", e.getMessage());
-    }
+    return cellInfoMap;
 }
+
+// Helper method to get WritableMap for WCDMA CellInfo
+private WritableMap getWcdmaCellInfoMap(CellInfoWcdma cellInfoWcdma) {
+    WritableMap cellInfoMap = Arguments.createMap();
+    CellIdentityWcdma cellIdentityWcdma = cellInfoWcdma.getCellIdentity();
+    CellSignalStrength signalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
+
+    cellInfoMap.putInt("lac", cellIdentityWcdma.getLac());
+    cellInfoMap.putInt("cellIdentity", cellIdentityWcdma.getCid());
+    cellInfoMap.putInt("psc", cellIdentityWcdma.getPsc());
+    cellInfoMap.putInt("mcc", cellIdentityWcdma.getMcc());
+    cellInfoMap.putInt("mnc", cellIdentityWcdma.getMnc());
+    cellInfoMap.putInt("Dbm", signalStrengthWcdma.getDbm());
+    cellInfoMap.putInt("signalStrengthLevel", signalStrengthWcdma.getLevel());
+
+    return cellInfoMap;
+}
+
+// Helper method to get WritableMap for CDMA CellInfo
+private WritableMap getCdmaCellInfoMap(CellInfoCdma cellInfoCdma) {
+    WritableMap cellInfoMap = Arguments.createMap();
+    CellIdentityCdma cellIdentityCdma = cellInfoCdma.getCellIdentity();
+    CellSignalStrength signalStrengthCdma = cellInfoCdma.getCellSignalStrength();
+
+    cellInfoMap.putInt("systemId", cellIdentityCdma.getSystemId());
+    cellInfoMap.putInt("networkId", cellIdentityCdma.getNetworkId());
+    cellInfoMap.putInt("basestationId", cellIdentityCdma.getBasestationId());
+    cellInfoMap.putInt("Dbm", signalStrengthCdma.getDbm());
+    cellInfoMap.putInt("signalStrengthLevel", signalStrengthCdma.getLevel());
+
+    return cellInfoMap;
+}
+
+// Helper method to get WritableMap for LTE CellInfo
+private WritableMap getLteCellInfoMap(CellInfoLte cellInfoLte) {
+    WritableMap cellInfoMap = Arguments.createMap();
+    CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
+    CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
+
+    cellInfoMap.putInt("rsrp", signalStrengthLte.getRsrp());
+    cellInfoMap.putInt("cellIdentity", cellIdentityLte.getCi());
+    cellInfoMap.putInt("pci", cellIdentityLte.getPci());
+    cellInfoMap.putInt("Dbm", signalStrengthLte.getDbm());
+    cellInfoMap.putInt("mcc", cellIdentityLte.getMcc());
+    cellInfoMap.putInt("tac", cellIdentityLte.getTac());
+    cellInfoMap.putInt("mnc", cellIdentityLte.getMnc());
+    cellInfoMap.putInt("signalStrengthLevel", signalStrengthLte.getLevel());
+
+    return cellInfoMap;
+}
+
+
+
+// Modify getCellInfoMap method to handle GSM and WCDMA
+private WritableMap getCellInfoMap(CellInfo cellInfo) {
+    if (cellInfo instanceof CellInfoLte) {
+        return getLteCellInfoMap((CellInfoLte) cellInfo);
+    } else if (cellInfo instanceof CellInfoGsm) {
+        return getGsmCellInfoMap((CellInfoGsm) cellInfo);
+    } else if (cellInfo instanceof CellInfoCdma) {
+        return getCdmaCellInfoMap((CellInfoCdma) cellInfo);
+    } else if (cellInfo instanceof CellInfoWcdma) {
+        return getWcdmaCellInfoMap((CellInfoWcdma) cellInfo);
+    }
+
+    return null;
+}
+
+
+// Helper method to get ASU level
+private int getAsuLevel(CellInfo cellInfo) {
+    int asuLevel = -1;
+    if (cellInfo instanceof CellInfoLte) {
+        asuLevel = ((CellInfoLte) cellInfo).getCellSignalStrength().getAsuLevel();
+    } else if (cellInfo instanceof CellInfoGsm) {
+        asuLevel = ((CellInfoGsm) cellInfo).getCellSignalStrength().getAsuLevel();
+    } else if (cellInfo instanceof CellInfoCdma) {
+        asuLevel = ((CellInfoCdma) cellInfo).getCellSignalStrength().getAsuLevel();
+    } else if (cellInfo instanceof CellInfoWcdma) {
+        asuLevel = ((CellInfoWcdma) cellInfo).getCellSignalStrength().getAsuLevel();
+    }
+    return asuLevel;
+}
+
+// Helper method to get CellInfo for the current network type
+private CellInfo getCellInfoForNetworkType(TelephonyManager telephonyManager) {
+    List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
+    if (cellInfoList != null && !cellInfoList.isEmpty()) {
+        // Assuming primary cell
+        return cellInfoList.get(0);
+    }
+    return null;
+}
+
+    
+
+// @ReactMethod
+// public void getNetworkInfos(Promise promise) {
+//     try {
+//         int simCount = telephonyManager.getPhoneCount();
+//         WritableArray networkInfos = Arguments.createArray();
+
+//         for (int subscriptionId = 0; subscriptionId < simCount; subscriptionId++) {
+//             try {
+//                 TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
+
+//                 WritableMap networkInfo = Arguments.createMap();
+
+//                 // Retrieve PLMN (Network Operator)
+//                 networkInfo.putString("plmn", telephonyManagerForSlot.getNetworkOperator());
+
+//                 // Retrieve Operator Name (Network Operator)
+//                 networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperatorName());
+
+//                 // Retrieve Cell Connection Status
+//                 networkInfo.putBoolean("connected", telephonyManagerForSlot.getCallState() == TelephonyManager.CALL_STATE_IDLE);
+
+//                 // Retrieve Roaming status
+//                 networkInfo.putBoolean("roaming", telephonyManagerForSlot.isNetworkRoaming());
+
+//                 // Retrieve ASU (Arbitrary Strength Unit) level
+//                 int asuLevel = -1;
+//                 List<CellInfo> cellInfoList = telephonyManagerForSlot.getAllCellInfo();
+
+//                 if (cellInfoList != null && !cellInfoList.isEmpty()) {
+//                     CellInfo primaryCellInfo = cellInfoList.get(0); // Assuming primary cell
+//                     if (primaryCellInfo instanceof CellInfoLte) {
+//                         asuLevel = ((CellInfoLte) primaryCellInfo).getCellSignalStrength().getAsuLevel();
+//                     }
+//                 }
+
+//                 networkInfo.putInt("asu", asuLevel);
+
+//                 // Retrieve Cell Identity (CID)
+//                 int cellIdentity = -1;
+//                 int band = -1;
+//                 int dbm = -1;
+
+//                 if (telephonyManagerForSlot.getDataNetworkType() == TelephonyManager.NETWORK_TYPE_LTE) {
+//                     CellInfo cellInfo = telephonyManagerForSlot.getAllCellInfo().get(0);
+//                     if (cellInfo instanceof CellInfoLte) {
+//                         CellIdentityLte cellIdentityLte = ((CellInfoLte) cellInfo).getCellIdentity();
+//                         CellSignalStrengthLte signalStrengthLte = ((CellInfoLte) cellInfo).getCellSignalStrength();
+
+//                         cellIdentity = cellIdentityLte.getCi();
+//                         band = cellIdentityLte.getEarfcn();
+//                         dbm = signalStrengthLte.getDbm();
+//                     }
+//                 }
+
+//                 networkInfo.putInt("cellIdentity", cellIdentity);
+//                 networkInfo.putInt("band", band);
+//                 networkInfo.putInt("dbm", dbm);
+
+//                 networkInfos.pushMap(networkInfo);
+//             } catch (Exception e) {
+//                 networkInfos.pushNull();
+//             }
+//         }
+
+//         promise.resolve(networkInfos);
+//     } catch (Exception e) {
+//         promise.reject("NETWORK_INFO_ERROR", e.getMessage());
+//     }
+// }
 
 
 @ReactMethod
@@ -364,7 +580,7 @@ public void measureUploadSpeed(String url, String data, Promise promise) {
 
         if (uploadTime > 0) {
             // Calculate upload speed in Mbps
-            double uploadSpeedMbps = (data.length() / 1024) / (uploadTime / 1000); // Convert to Mbps
+            double uploadSpeedMbps = (data.length() / 1024.0) / (uploadTime / 1000.0); // Convert to Mbps
             promise.resolve(uploadSpeedMbps);
         } else {
             promise.reject("UPLOAD_SPEED_ERROR", "Upload speed measurement failed");
@@ -380,14 +596,15 @@ public void measureDownloadSpeed(String url, Promise promise) {
     Request request = new Request.Builder().url(url).build();
 
     try {
-        Response response = client.newCall(request).execute();
-        long fileSize = response.body().contentLength();
         long startTime = System.currentTimeMillis();
-        long endTime = System.currentTimeMillis();
+        Response response = client.newCall(request).execute();
+        long endTime = System.currentTimeMillis(); // Move this line inside the try block
+
+        long fileSize = response.body().contentLength();
         long downloadTime = endTime - startTime;
 
         if (downloadTime > 0) {
-            double downloadSpeedMbps = (fileSize / 1024) / (downloadTime / 1000); // Convert to Mbps
+            double downloadSpeedMbps = (fileSize / 1024.0) / (downloadTime / 1000.0); // Convert to Mbps
             promise.resolve(downloadSpeedMbps);
         } else {
             promise.reject("DOWNLOAD_SPEED_ERROR", "Download speed measurement failed");
@@ -397,6 +614,7 @@ public void measureDownloadSpeed(String url, Promise promise) {
     }
 }
 
+
 @ReactMethod
 public void measureLatency(String host, Promise promise) {
     try {
@@ -405,7 +623,10 @@ public void measureLatency(String host, Promise promise) {
         if (address.isReachable(5000)) { // Timeout in milliseconds
             long endTime = System.currentTimeMillis();
             long latency = endTime - startTime;
-            promise.resolve(latency);
+
+            // Convert long to double before resolving
+            double latencyInSeconds = latency / 1000.0;
+            promise.resolve(latencyInSeconds);
         } else {
             promise.reject("LATENCY_ERROR", "Host is not reachable");
         }
@@ -415,6 +636,7 @@ public void measureLatency(String host, Promise promise) {
         promise.reject("LATENCY_ERROR", e.getMessage());
     }
 }
+
 
 
   @Override
