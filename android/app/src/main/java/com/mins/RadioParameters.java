@@ -254,19 +254,6 @@ public void getSignalStrength(Promise promise) {
                     CellInfo cellInfo = getCellInfoForNetworkType(telephonyManagerForSlot);
                     if (cellInfo != null) {
                         networkInfo = getCellInfoMap((CellInfo) cellInfo);
-                        // if (cellInfo instanceof CellInfoLte) {
-                        //     CellIdentityLte cellIdentityLte = ((CellInfoLte) cellInfo).getCellIdentity();
-                        //     CellSignalStrengthLte signalStrengthLte = ((CellInfoLte) cellInfo).getCellSignalStrength();
-    
-                        //     cellIdentity = cellIdentityLte.getCi();
-                        //     band = cellIdentityLte.getEarfcn();
-                        //     dbm = signalStrengthLte.getDbm();
-                        // } else if (cellInfo instanceof CellInfoGsm) {
-                        //     networkInfo = getGsmCellInfoMap((CellInfoGsm) cellInfo);
-                        // } else if (cellInfo instanceof CellInfoWcdma) {
-                        //     networkInfo = getWcdmaCellInfoMap((CellInfoWcdma) cellInfo);
-                        // }
-                        // Add conditions for other network types if needed
                     }
     
     
