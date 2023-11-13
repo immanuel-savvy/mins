@@ -9,6 +9,7 @@ import com.facebook.react.bridge.Promise;
 import android.os.Build;
 import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.HashMap;
 import android.content.Context;
 import android.util.Log;
@@ -244,44 +245,47 @@ public void getSignalStrength(Promise promise) {
                     TelephonyManager telephonyManagerForSlot = telephonyManager.createForSubscriptionId(subscriptionId);
     
                     WritableMap networkInfo = Arguments.createMap();
-
-
+    
                     // Retrieve Cell Identity (CID), Band, and dBm
                     int cellIdentity = -1;
                     int band = -1;
                     int dbm = -1;
     
-                    CellInfo cellInfo = getCellInfoForNetworkType(telephonyManagerForSlot);
-                    if (cellInfo != null) {
-                        networkInfo = getCellInfoMap((CellInfo) cellInfo);
-                    }
+                    // Use the updated method to get all cell info for the specified network type
+                    List<CellInfo> cellInfoList = getAllCellInfoForNetworkType(telephonyManagerForSlot);
     
-    
-                    // Retrieve PLMN (Network Operator)
-                    networkInfo.putString("plmn", telephonyManagerForSlot.getNetworkOperator());
-    
-                    // Retrieve Operator Name (Network Operator)
-                    networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperatorName());
-    
-                    // Retrieve Cell Connection Status
-                    networkInfo.putBoolean("connected", telephonyManagerForSlot.getCallState() == TelephonyManager.CALL_STATE_IDLE);
-    
-                    // Retrieve Roaming status
-                    networkInfo.putBoolean("roaming", telephonyManagerForSlot.isNetworkRoaming());
-    
-                    // Retrieve ASU (Arbitrary Strength Unit) level
-                    int asuLevel = -1;
-                    List<CellInfo> cellInfoList = telephonyManagerForSlot.getAllCellInfo();
+                    Log.d("YourTag", "SIM 1 Operator: " + telephonyManagerForSlot.getNetworkOperator());
+                    Log.d("YourTag", "SIM 1 Operator Name: " + telephonyManagerForSlot.getNetworkOperatorName());
     
                     if (cellInfoList != null && !cellInfoList.isEmpty()) {
-                        CellInfo primaryCellInfo = cellInfoList.get(0); // Assuming primary cell
+                        // Process only registered cell information for the current SIM slot
+                        for (CellInfo cellInfo : cellInfoList) {
+                            if (cellInfo.isRegistered()) {
+                                networkInfo = getCellInfoMap((CellInfo) cellInfo);
     
-                        asuLevel = getAsuLevel(primaryCellInfo);
-                        // Common information for all network types
+                                // Retrieve PLMN (Network Operator)
+                                networkInfo.putString("plmn", telephonyManagerForSlot.getNetworkOperator());
+    
+                                // Retrieve Operator Name (Network Operator)
+                                // networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperatorName());
+    
+                                // Retrieve Cell Connection Status
+                                networkInfo.putBoolean("connected", telephonyManagerForSlot.getCallState() == TelephonyManager.CALL_STATE_IDLE);
+    
+                                // Retrieve Roaming status
+                                networkInfo.putBoolean("roaming", telephonyManagerForSlot.isNetworkRoaming());
+    
+                                // Retrieve ASU (Arbitrary Strength Unit) level
+                                int asuLevel = -1;
+                                asuLevel = getAsuLevel(cellInfo);
+                                networkInfo.putInt("asu", asuLevel);
+    
+                                networkInfos.pushMap(networkInfo);
+                            }
+                        }
+                    } else {
+                        networkInfos.pushNull();
                     }
-                    networkInfo.putInt("asu", asuLevel);
-    
-                    networkInfos.pushMap(networkInfo);
                 } catch (Exception e) {
                     e.printStackTrace(); // Log the exception
                     networkInfos.pushNull();
@@ -294,73 +298,6 @@ public void getSignalStrength(Promise promise) {
         }
     }
     
-
-// Helper method to get WritableMap for GSM CellInfo
-private WritableMap getGsmCellInfoMap(CellInfoGsm cellInfoGsm) {
-    WritableMap cellInfoMap = Arguments.createMap();
-    CellIdentityGsm cellIdentityGsm = cellInfoGsm.getCellIdentity();
-    CellSignalStrengthGsm signalStrengthGsm = cellInfoGsm.getCellSignalStrength();
-
-    cellInfoMap.putInt("mcc", cellIdentityGsm.getMcc());
-    cellInfoMap.putInt("mnc", cellIdentityGsm.getMnc());
-    cellInfoMap.putInt("cellIdentity", cellIdentityGsm.getCid());
-    cellInfoMap.putInt("lac", cellIdentityGsm.getLac());
-    cellInfoMap.putInt("Dbm", signalStrengthGsm.getDbm());
-    cellInfoMap.putInt("signalStrengthLevel", signalStrengthGsm.getLevel());
-
-    return cellInfoMap;
-}
-
-// Helper method to get WritableMap for WCDMA CellInfo
-private WritableMap getWcdmaCellInfoMap(CellInfoWcdma cellInfoWcdma) {
-    WritableMap cellInfoMap = Arguments.createMap();
-    CellIdentityWcdma cellIdentityWcdma = cellInfoWcdma.getCellIdentity();
-    CellSignalStrength signalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
-
-    cellInfoMap.putInt("lac", cellIdentityWcdma.getLac());
-    cellInfoMap.putInt("cellIdentity", cellIdentityWcdma.getCid());
-    cellInfoMap.putInt("psc", cellIdentityWcdma.getPsc());
-    cellInfoMap.putInt("mcc", cellIdentityWcdma.getMcc());
-    cellInfoMap.putInt("mnc", cellIdentityWcdma.getMnc());
-    cellInfoMap.putInt("Dbm", signalStrengthWcdma.getDbm());
-    cellInfoMap.putInt("signalStrengthLevel", signalStrengthWcdma.getLevel());
-
-    return cellInfoMap;
-}
-
-// Helper method to get WritableMap for CDMA CellInfo
-private WritableMap getCdmaCellInfoMap(CellInfoCdma cellInfoCdma) {
-    WritableMap cellInfoMap = Arguments.createMap();
-    CellIdentityCdma cellIdentityCdma = cellInfoCdma.getCellIdentity();
-    CellSignalStrength signalStrengthCdma = cellInfoCdma.getCellSignalStrength();
-
-    cellInfoMap.putInt("systemId", cellIdentityCdma.getSystemId());
-    cellInfoMap.putInt("networkId", cellIdentityCdma.getNetworkId());
-    cellInfoMap.putInt("basestationId", cellIdentityCdma.getBasestationId());
-    cellInfoMap.putInt("Dbm", signalStrengthCdma.getDbm());
-    cellInfoMap.putInt("signalStrengthLevel", signalStrengthCdma.getLevel());
-
-    return cellInfoMap;
-}
-
-// Helper method to get WritableMap for LTE CellInfo
-private WritableMap getLteCellInfoMap(CellInfoLte cellInfoLte) {
-    WritableMap cellInfoMap = Arguments.createMap();
-    CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
-    CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
-
-    cellInfoMap.putInt("rsrp", signalStrengthLte.getRsrp());
-    cellInfoMap.putInt("cellIdentity", cellIdentityLte.getCi());
-    cellInfoMap.putInt("pci", cellIdentityLte.getPci());
-    cellInfoMap.putInt("Dbm", signalStrengthLte.getDbm());
-    cellInfoMap.putInt("mcc", cellIdentityLte.getMcc());
-    cellInfoMap.putInt("tac", cellIdentityLte.getTac());
-    cellInfoMap.putInt("mnc", cellIdentityLte.getMnc());
-    cellInfoMap.putInt("signalStrengthLevel", signalStrengthLte.getLevel());
-
-    return cellInfoMap;
-}
-
 // Modify getCellInfoMap method to handle GSM, CDMA, WCDMA and LTE
 private WritableMap getCellInfoMap(CellInfo cellInfo) {
     if (cellInfo instanceof CellInfoLte) {
@@ -376,6 +313,119 @@ private WritableMap getCellInfoMap(CellInfo cellInfo) {
     return null;
 }
 
+private List<CellInfo> getAllCellInfoForNetworkType(TelephonyManager telephonyManager) {
+    List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
+    List<CellInfo> filteredCellInfoList = new ArrayList<>();
+
+    if (cellInfoList != null && !cellInfoList.isEmpty()) {
+        // Process all cell information and filter by the specified network type
+        for (CellInfo cellInfo : cellInfoList) {
+            filteredCellInfoList.add(cellInfo);
+        }
+    }
+
+    return filteredCellInfoList;
+}
+
+private int getCellNetworkType(CellInfo cellInfo) {
+    if (cellInfo instanceof CellInfoGsm) {
+        return TelephonyManager.NETWORK_TYPE_GSM;
+    } else if (cellInfo instanceof CellInfoCdma) {
+        return TelephonyManager.NETWORK_TYPE_CDMA;
+    } else if (cellInfo instanceof CellInfoLte) {
+        return TelephonyManager.NETWORK_TYPE_LTE;
+    } else if (cellInfo instanceof CellInfoWcdma) {
+        return TelephonyManager.NETWORK_TYPE_UMTS;
+    } else {
+        // Handle other cell types as needed
+        return TelephonyManager.NETWORK_TYPE_UNKNOWN;
+    }
+}
+
+// Helper method to get WritableMap for GSM CellInfo
+private WritableMap getGsmCellInfoMap(CellInfoGsm cellInfoGsm) {
+    WritableMap cellInfoMap = Arguments.createMap();
+    CellIdentityGsm cellIdentityGsm = cellInfoGsm.getCellIdentity();
+    CellSignalStrengthGsm signalStrengthGsm = cellInfoGsm.getCellSignalStrength();
+
+    cellInfoMap.putInt("mcc", cellIdentityGsm.getMcc());
+    cellInfoMap.putInt("mnc", cellIdentityGsm.getMnc());
+    cellInfoMap.putString("operator", cellIdentityGsm.getOperatorAlphaLong().toString());
+    cellInfoMap.putInt("cellIdentity", cellIdentityGsm.getCid());
+    cellInfoMap.putInt("lac", cellIdentityGsm.getLac());
+    cellInfoMap.putInt("cellNetworkType", TelephonyManager.NETWORK_TYPE_GSM);
+    cellInfoMap.putInt("Dbm", signalStrengthGsm.getDbm());
+    cellInfoMap.putInt("rssi", signalStrengthGsm.getRssi());
+    cellInfoMap.putInt("bitErrorRate", signalStrengthGsm.getBitErrorRate());
+    cellInfoMap.putInt("signalStrengthLevel", signalStrengthGsm.getLevel());
+
+    return cellInfoMap;
+}
+
+// Helper method to get WritableMap for WCDMA CellInfo
+private WritableMap getWcdmaCellInfoMap(CellInfoWcdma cellInfoWcdma) {
+    WritableMap cellInfoMap = Arguments.createMap();
+    CellIdentityWcdma cellIdentityWcdma = cellInfoWcdma.getCellIdentity();
+    CellSignalStrength signalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
+
+    cellInfoMap.putString("operator", cellIdentityWcdma.getOperatorAlphaLong().toString());
+    cellInfoMap.putInt("lac", cellIdentityWcdma.getLac());
+    cellInfoMap.putInt("cellIdentity", cellIdentityWcdma.getCid());
+    cellInfoMap.putInt("psc", cellIdentityWcdma.getPsc());
+    cellInfoMap.putInt("mcc", cellIdentityWcdma.getMcc());
+    cellInfoMap.putInt("cellNetworkType", TelephonyManager.NETWORK_TYPE_UMTS);
+    cellInfoMap.putInt("mnc", cellIdentityWcdma.getMnc());
+    cellInfoMap.putInt("Dbm", signalStrengthWcdma.getDbm());
+    // cellInfoMap.putInt("rscp", signalStrengthWcdma.getRscp());
+    // cellInfoMap.putInt("ecNo", signalStrengthWcdma.getEcNo());
+    cellInfoMap.putInt("signalStrengthLevel", signalStrengthWcdma.getLevel());
+
+    return cellInfoMap;
+}
+
+// Helper method to get WritableMap for CDMA CellInfo
+private WritableMap getCdmaCellInfoMap(CellInfoCdma cellInfoCdma) {
+    WritableMap cellInfoMap = Arguments.createMap();
+    CellIdentityCdma cellIdentityCdma = cellInfoCdma.getCellIdentity();
+    CellSignalStrength signalStrengthCdma = cellInfoCdma.getCellSignalStrength();
+
+    cellInfoMap.putString("operator", cellIdentityCdma.getOperatorAlphaLong().toString());
+    cellInfoMap.putInt("systemId", cellIdentityCdma.getSystemId());
+    cellInfoMap.putInt("networkId", cellIdentityCdma.getNetworkId());
+    cellInfoMap.putInt("basestationId", cellIdentityCdma.getBasestationId());
+    cellInfoMap.putInt("cellNetworkType", TelephonyManager.NETWORK_TYPE_CDMA);
+    // cellInfoMap.putInt("EcIo", signalStrengthCdma.getCdmaEcio());
+    // cellInfoMap.putInt("rssi", signalStrengthCdma.getCdmaDbm());
+    cellInfoMap.putInt("Dbm", signalStrengthCdma.getDbm());
+    cellInfoMap.putInt("signalStrengthLevel", signalStrengthCdma.getLevel());
+
+    return cellInfoMap;
+}
+
+// Helper method to get WritableMap for LTE CellInfo
+private WritableMap getLteCellInfoMap(CellInfoLte cellInfoLte) {
+    WritableMap cellInfoMap = Arguments.createMap();
+    CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
+    CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
+
+    cellInfoMap.putString("operator", cellIdentityLte.getOperatorAlphaLong().toString());
+    cellInfoMap.putInt("rsrp", signalStrengthLte.getRsrp());
+    cellInfoMap.putInt("cellIdentity", cellIdentityLte.getCi());
+    cellInfoMap.putInt("rsrq", signalStrengthLte.getRsrq());
+    cellInfoMap.putInt("rssnr", signalStrengthLte.getRssnr());
+    cellInfoMap.putInt("cqi", signalStrengthLte.getCqi());
+    cellInfoMap.putInt("pci", cellIdentityLte.getPci());
+    cellInfoMap.putInt("cellNetworkType", TelephonyManager.NETWORK_TYPE_LTE);
+    cellInfoMap.putInt("earfcn", cellIdentityLte.getEarfcn());
+    cellInfoMap.putInt("timingAdvance", signalStrengthLte.getTimingAdvance());
+    cellInfoMap.putInt("Dbm", signalStrengthLte.getDbm());
+    cellInfoMap.putInt("mcc", cellIdentityLte.getMcc());
+    cellInfoMap.putInt("tac", cellIdentityLte.getTac());
+    cellInfoMap.putInt("mnc", cellIdentityLte.getMnc());
+    cellInfoMap.putInt("signalStrengthLevel", signalStrengthLte.getLevel());
+
+    return cellInfoMap;
+}
 
 // Helper method to get ASU level
 private int getAsuLevel(CellInfo cellInfo) {
@@ -391,17 +441,6 @@ private int getAsuLevel(CellInfo cellInfo) {
     }
     return asuLevel;
 }
-
-// Helper method to get CellInfo for the current network type
-private CellInfo getCellInfoForNetworkType(TelephonyManager telephonyManager) {
-    List<CellInfo> cellInfoList = telephonyManager.getAllCellInfo();
-    if (cellInfoList != null && !cellInfoList.isEmpty()) {
-        // Assuming primary cell
-        return cellInfoList.get(0);
-    }
-    return null;
-}
-
 
 @ReactMethod
 public void getSimState(Promise promise) {

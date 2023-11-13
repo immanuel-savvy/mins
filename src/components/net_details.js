@@ -24,13 +24,13 @@ class Net_details extends React.Component {
       if (n[0] == 'timestamp')
         n[1] = `${date_string(n[1])}, ${time_string(n[1], true)}`;
       else if (['upload_speed', 'download_speed'].includes(n[0]))
-        n[1] = `${bps_to_mbps(n[1])} Mbps`;
+        n[1] = `${n[1]} Mbps`;
       else if (n[0] == 'latency') n[1] = `${n[1]} ms`;
 
       n[0] = camel_case_to_human_case(n[0]);
 
       n[0] = n[0].replace(/\./g, ' > ');
-      n[0] = n[0].replace(/_/g, ' ');
+      n[0] = n[0].replace(/\_/g, ' ');
 
       return n;
     });

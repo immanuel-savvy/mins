@@ -261,6 +261,8 @@ class Mins extends React.Component {
       'SignalStrength',
     ];
 
+    console.log(netinfos, 'hellooo');
+
     let sims = new Object();
     for (let i = 0; i < netinfos.length; i++) {
       let sim = `Sim ${i + 1}`;
@@ -269,6 +271,8 @@ class Mins extends React.Component {
         sims[sim][val_names[k]] = v[i];
       });
     }
+
+    console.log(JSON.stringify(sims, null, 2));
 
     return sims;
   };

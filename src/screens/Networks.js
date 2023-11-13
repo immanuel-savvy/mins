@@ -116,7 +116,7 @@ class Networks extends React.Component {
                                   style={{alignItems: 'center'}}>
                                   <Fr_text size={wp(4.5)}>
                                     {`${
-                                      net.netinfo?.details?.carrier ||
+                                      net.netinfo?.isp?.split(' ')[0] ||
                                       net.netinfo?.details?.ssid
                                     } (${net_type(net.netinfo, true, 'Mbps')})`}
                                   </Fr_text>
