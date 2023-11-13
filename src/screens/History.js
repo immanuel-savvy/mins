@@ -155,8 +155,10 @@ class History extends React.Component {
                                 }}>
                                 <Fr_text size={wp(4)}>
                                   {`${
-                                    net.netinfo?.details?.carrier ||
-                                    net.netinfo?.details?.ssid
+                                    net.netinfo?.details?.carrier
+                                      ? net.netinfo?.isp?.split(' ')[0] ||
+                                        net.netinfo.details.carrier
+                                      : net.netinfo?.details?.ssid
                                   } (${net_type(net.netinfo, true, 'Mbps')})`}
                                 </Fr_text>
                               </Bg_view>
