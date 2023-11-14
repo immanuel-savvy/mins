@@ -26,81 +26,115 @@ class Speed_header extends React.Component {
           return (
             <Bg_view
               no_bg
-              horizontal
-              no_centralise
               style={{
-                justifyContent: 'space-between',
-                padding: 20,
                 borderBottomColor: '#fff',
                 borderBottomWidth: 2,
+                padding: 20,
+                paddingBottom: netinfo.type === 'wifi' ? 0 : 20,
               }}>
-              <Bg_view no_bg horizontal flex={6}>
-                <Icon
-                  icon={require('./../assets/icons/antenna.jpeg')}
-                  style={{height: wp(15), width: wp(15)}}
-                />
+              <Bg_view
+                no_bg
+                horizontal
+                no_centralise
+                style={{
+                  justifyContent: 'space-between',
+                }}>
+                <Bg_view no_bg horizontal flex={6}>
+                  <Icon
+                    icon={require('./../assets/icons/antenna.jpeg')}
+                    style={{height: wp(15), width: wp(15)}}
+                  />
 
-                <Bg_view no_bg style={{marginLeft: 10}} flex>
+                  <Bg_view no_bg style={{marginLeft: 10}} flex>
+                    <Fr_text style={{color: '#fff', fontSize: 18}} bold>
+                      {!netinfo
+                        ? '-'
+                        : netinfo?.type === 'wifi'
+                        ? 'Wifi'
+                        : 'Data SIM'}
+                    </Fr_text>
+                    <Fr_text
+                      numberOfLines={1}
+                      style={{
+                        color: '#fff',
+                        fontSize: 18,
+                      }}>
+                      {!netinfo
+                        ? ''
+                        : netinfo.isp?.split(' ')[0] ||
+                          netinfo?.details?.carrier ||
+                          ``}
+                    </Fr_text>
+                    <Fr_text style={{color: '#fff', fontSize: 18}}>
+                      {net_type(netinfo)}
+                    </Fr_text>
+                    <Fr_text
+                      numberOfLines={1}
+                      style={{color: '#fff', fontSize: 18}}>
+                      {location?.locality
+                        ? `${location.locality}, ${location.city}`
+                        : '...'}
+                    </Fr_text>
+                  </Bg_view>
+                </Bg_view>
+                <Bg_view no_bg style={{marginRight: 10}} flex={3}>
                   <Fr_text style={{color: '#fff', fontSize: 18}} bold>
-                    {!netinfo
-                      ? '-'
-                      : netinfo?.type === 'wifi'
-                      ? 'Wifi'
-                      : 'Data SIM'}
+                    Connection
                   </Fr_text>
-                  <Fr_text
-                    numberOfLines={1}
-                    style={{
-                      color: '#fff',
-                      fontSize: 18,
-                    }}>
-                    {!netinfo
-                      ? ''
-                      : netinfo.isp?.split(' ')[0] ||
-                        netinfo?.details?.carrier ||
-                        ``}
+                  <Fr_text style={{color: '#fff', fontSize: 18}} capitalise>
+                    {netinfo?.type}
                   </Fr_text>
-                  <Fr_text style={{color: '#fff', fontSize: 18}}>
-                    {net_type(netinfo)}
-                  </Fr_text>
-                  <Fr_text
-                    numberOfLines={1}
-                    style={{color: '#fff', fontSize: 18}}>
-                    {location?.locality
-                      ? `${location.locality}, ${location.city}`
-                      : '...'}
-                  </Fr_text>
+                  {netinfo?.type === 'wifi' ? (
+                    <>
+                      <Fr_text style={{color: '#fff', fontSize: 18}} bold>
+                        Frequency
+                      </Fr_text>
+                      <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
+                        {netinfo?.details.frequency}
+                      </Fr_text>
+                    </>
+                  ) : netinfo.radio['Sim 2']?.Net?.cellIdentity ? (
+                    <>
+                      <Fr_text
+                        style={{
+                          color: '#fff',
+                          fontSize: 16,
+                          marginTop: hp(0.7),
+                        }}
+                        bold>
+                        Dual Sim
+                      </Fr_text>
+                      <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
+                        {sim2?.Net?.operator} ({sim2?.NetworkType})
+                      </Fr_text>
+                    </>
+                  ) : null}
                 </Bg_view>
               </Bg_view>
-              <Bg_view no_bg style={{marginRight: 10}} flex={3}>
-                <Fr_text style={{color: '#fff', fontSize: 18}} bold>
-                  Connection
-                </Fr_text>
-                <Fr_text style={{color: '#fff', fontSize: 18}} capitalise>
-                  {netinfo?.type}
-                </Fr_text>
-                {netinfo?.type === 'wifi' ? (
-                  <>
-                    <Fr_text style={{color: '#fff', fontSize: 18}} bold>
-                      Frequency
-                    </Fr_text>
-                    <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
-                      {netinfo?.details.frequency}
-                    </Fr_text>
-                  </>
-                ) : netinfo.radio['Sim 2']?.Net?.cellIdentity ? (
-                  <>
-                    <Fr_text
-                      style={{color: '#fff', fontSize: 16, marginTop: hp(0.7)}}
-                      bold>
-                      Dual Sim
-                    </Fr_text>
+              {netinfo?.type === 'wifi' ? (
+                <Bg_view
+                  style={{
+                    height: hp(4),
+                    justifyContent: 'space-between',
+                    borderTopWidth: 0,
+                    borderTopColor: '#ccc',
+                  }}
+                  horizontal
+                  no_bg>
+                  <Bg_view no_bg>
                     <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
                       {sim2.Net.operator} ({sim2.NetworkType})
                     </Fr_text>
-                  </>
-                ) : null}
-              </Bg_view>
+                  </Bg_view>
+                  {sim2?.Net ? (
+                    <Bg_view no_bg>
+                      <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
+                        {sim2.Net.operator} ({sim2.NetworkType})
+                      </Fr_text>
+                    </Bg_view>
+                  ) : null}
+                </Bg_view>
+              ) : null}
             </Bg_view>
           );
         }}

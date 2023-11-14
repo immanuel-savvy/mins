@@ -59,6 +59,36 @@ public class RadioParameters extends ReactContextBaseJavaModule {
    + " and location: " + location);
   }
 
+  @ReactMethod
+  public void getDeviceInfo(Promise promise) {
+    try {
+        Context context = getReactApplicationContext();
+
+        String brand = Build.BRAND;
+        String model = Build.MODEL;
+        String device = Build.DEVICE;
+        String osVersion = Build.VERSION.RELEASE;
+        int sdkVersion = Build.VERSION.SDK_INT;
+
+        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        String deviceId = telephonyManager.getDeviceId(); // Requires READ_PHONE_STATE permission
+
+        // Create a WritableMap to store device information
+        WritableMap deviceInfo = Arguments.createMap();
+        deviceInfo.putString("brand", brand);
+        deviceInfo.putString("model", model);
+        deviceInfo.putString("device", device);
+        deviceInfo.putString("osVersion", osVersion);
+        deviceInfo.putInt("sdkVersion", sdkVersion);
+        deviceInfo.putString("deviceId", deviceId);
+
+        // Resolve the promise with the WritableMap
+        promise.resolve(deviceInfo);
+    } catch (Exception e) {
+        promise.reject("DEVICE_INFO_ERROR", e.getMessage());
+    }
+}
+
 @ReactMethod
 public void getSignalStrength(Promise promise) {
     try {

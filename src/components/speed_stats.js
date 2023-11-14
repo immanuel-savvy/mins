@@ -201,7 +201,7 @@ class Speed_stats extends React.Component {
                           labelStyle={{color: '#f9f059'}}
                           defaultValue={0}
                           size={wp(75)}
-                          maxValue={500}
+                          maxValue={750}
                           allowedDecimals={2}
                         />
                       </Bg_view>

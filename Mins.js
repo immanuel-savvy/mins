@@ -262,7 +262,6 @@ class Mins extends React.Component {
       convertPhoneTypeToText(n),
     );
 
-    let netinfos_ = new Array();
     // netinfos.map((n, ni) => {
     //   // console.log(JSON.stringify(n, null, 2));
     //   let nt = netinfos_.find(
@@ -273,13 +272,7 @@ class Mins extends React.Component {
     //   console.log(JSON.stringify(netinfos_, null, 2), 'LOLA IS GREY' + ni);
     // });
 
-    let val_arr = mock || [
-      netinfos_,
-      callstates,
-      phonetypes,
-      simstate,
-      networktype,
-    ];
+    let val_arr = [netinfos, callstates, phonetypes, simstate, networktype];
 
     val_arr[0] = filterArray(val_arr[0]);
 
@@ -325,7 +318,11 @@ class Mins extends React.Component {
     let radio = await this.radio_parameters();
 
     this.setState({
-      netinfo: {...netinfo, radio},
+      netinfo: {
+        ...netinfo,
+        radio,
+        device: await RadioParameters.getDeviceInfo(),
+      },
       offline: !netinfo.isConnected,
     });
   };

@@ -45,7 +45,7 @@ const data_sim = (netinfo, not = false) => {
       } else if (not) return sim;
     }
   }
-  return netinfo.radio['Sim 1'];
+  return {};
 };
 
 const net_type = (netinfo, linkspeed, suff = '') => {
