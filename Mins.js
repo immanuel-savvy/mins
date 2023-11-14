@@ -24,6 +24,7 @@ import Icon from './src/components/icon';
 import {App_data, Networks_data, Test_history} from './Contexts';
 import toast from './src/utils/toast';
 import {copy_object} from './src/utils/functions';
+import {mock} from './nottess';
 
 const {RadioParameters} = NativeModules;
 
@@ -221,6 +222,24 @@ function convertCallStateToText(callState) {
   }
 }
 
+function filterArray(originalArray) {
+  let new_arr = [];
+  for (let o = 0; o < originalArray.length; o++) {
+    let oa = originalArray[o];
+    let pass;
+    for (let n = 0; n < new_arr.length; n++) {
+      let na = new_arr[n];
+      if (na.operator === oa.operator || na.mnc === oa.mnc) {
+        pass = true;
+        break;
+      }
+    }
+    if (!pass) new_arr.push(oa);
+  }
+
+  return new_arr;
+}
+
 class Mins extends React.Component {
   constructor(props) {
     super(props);
@@ -242,15 +261,29 @@ class Mins extends React.Component {
     let phonetypes = (await RadioParameters.getPhoneTypes()).map(n =>
       convertPhoneTypeToText(n),
     );
-    let signalstrength = await RadioParameters.getSignalStrength();
-    let val_arr = [
-      netinfos,
+
+    let netinfos_ = new Array();
+    // netinfos.map((n, ni) => {
+    //   // console.log(JSON.stringify(n, null, 2));
+    //   let nt = netinfos_.find(
+    //     net => n.operator === net.operator && n.mnc === net.mnc,
+    //     // n.mcc === net.mcc,
+    //   );
+    //   if (!nt) netinfos_.push(n);
+    //   console.log(JSON.stringify(netinfos_, null, 2), 'LOLA IS GREY' + ni);
+    // });
+
+    let val_arr = mock || [
+      netinfos_,
       callstates,
       phonetypes,
       simstate,
       networktype,
-      signalstrength,
     ];
+
+    val_arr[0] = filterArray(val_arr[0]);
+
+    // console.log(val_arr, 'val array');
 
     let val_names = [
       'Net',
@@ -258,15 +291,13 @@ class Mins extends React.Component {
       'PhoneTypes',
       'SimState',
       'NetworkType',
-      'SignalStrength',
     ];
 
-    console.log(netinfos, 'hellooo');
-
     let sims = new Object();
-    for (let i = 0; i < netinfos.length; i++) {
+    for (let i = 0; i < val_arr[0].length; i++) {
       let sim = `Sim ${i + 1}`;
       if (!sims[sim]) sims[sim] = new Object();
+
       val_arr.map((v, k) => {
         sims[sim][val_names[k]] = v[i];
       });

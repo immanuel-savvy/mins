@@ -267,7 +267,7 @@ public void getSignalStrength(Promise promise) {
                                 networkInfo.putString("plmn", telephonyManagerForSlot.getNetworkOperator());
     
                                 // Retrieve Operator Name (Network Operator)
-                                // networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperatorName());
+                                networkInfo.putString("operator", telephonyManagerForSlot.getNetworkOperatorName());
     
                                 // Retrieve Cell Connection Status
                                 networkInfo.putBoolean("connected", telephonyManagerForSlot.getCallState() == TelephonyManager.CALL_STATE_IDLE);
@@ -350,13 +350,12 @@ private WritableMap getGsmCellInfoMap(CellInfoGsm cellInfoGsm) {
 
     cellInfoMap.putInt("mcc", cellIdentityGsm.getMcc());
     cellInfoMap.putInt("mnc", cellIdentityGsm.getMnc());
-    cellInfoMap.putString("operator", cellIdentityGsm.getOperatorAlphaLong().toString());
     cellInfoMap.putInt("cellIdentity", cellIdentityGsm.getCid());
     cellInfoMap.putInt("lac", cellIdentityGsm.getLac());
     cellInfoMap.putInt("cellNetworkType", TelephonyManager.NETWORK_TYPE_GSM);
     cellInfoMap.putInt("Dbm", signalStrengthGsm.getDbm());
-    cellInfoMap.putInt("rssi", signalStrengthGsm.getRssi());
-    cellInfoMap.putInt("bitErrorRate", signalStrengthGsm.getBitErrorRate());
+    // cellInfoMap.putInt("rssi", signalStrengthGsm.getRssi());
+    // cellInfoMap.putInt("bitErrorRate", signalStrengthGsm.getBitErrorRate());
     cellInfoMap.putInt("signalStrengthLevel", signalStrengthGsm.getLevel());
 
     return cellInfoMap;
@@ -368,7 +367,6 @@ private WritableMap getWcdmaCellInfoMap(CellInfoWcdma cellInfoWcdma) {
     CellIdentityWcdma cellIdentityWcdma = cellInfoWcdma.getCellIdentity();
     CellSignalStrength signalStrengthWcdma = cellInfoWcdma.getCellSignalStrength();
 
-    cellInfoMap.putString("operator", cellIdentityWcdma.getOperatorAlphaLong().toString());
     cellInfoMap.putInt("lac", cellIdentityWcdma.getLac());
     cellInfoMap.putInt("cellIdentity", cellIdentityWcdma.getCid());
     cellInfoMap.putInt("psc", cellIdentityWcdma.getPsc());
@@ -389,7 +387,6 @@ private WritableMap getCdmaCellInfoMap(CellInfoCdma cellInfoCdma) {
     CellIdentityCdma cellIdentityCdma = cellInfoCdma.getCellIdentity();
     CellSignalStrength signalStrengthCdma = cellInfoCdma.getCellSignalStrength();
 
-    cellInfoMap.putString("operator", cellIdentityCdma.getOperatorAlphaLong().toString());
     cellInfoMap.putInt("systemId", cellIdentityCdma.getSystemId());
     cellInfoMap.putInt("networkId", cellIdentityCdma.getNetworkId());
     cellInfoMap.putInt("basestationId", cellIdentityCdma.getBasestationId());
@@ -408,7 +405,6 @@ private WritableMap getLteCellInfoMap(CellInfoLte cellInfoLte) {
     CellIdentityLte cellIdentityLte = cellInfoLte.getCellIdentity();
     CellSignalStrengthLte signalStrengthLte = cellInfoLte.getCellSignalStrength();
 
-    cellInfoMap.putString("operator", cellIdentityLte.getOperatorAlphaLong().toString());
     cellInfoMap.putInt("rsrp", signalStrengthLte.getRsrp());
     cellInfoMap.putInt("cellIdentity", cellIdentityLte.getCi());
     cellInfoMap.putInt("rsrq", signalStrengthLte.getRsrq());

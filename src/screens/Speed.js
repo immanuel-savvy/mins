@@ -31,6 +31,23 @@ const measureDownloadSpeed = async url => {
   }
 };
 
+const data_sim = (netinfo, not = false) => {
+  if (!netinfo?.radio) return {};
+
+  if (netinfo.isp) {
+    let i = netinfo.isp.split(' ')[0];
+
+    for (let s in netinfo.radio) {
+      let sim = netinfo.radio[s];
+
+      if (sim?.Net.operator.toLowerCase().includes(i.toLowerCase())) {
+        if (!not) return sim;
+      } else if (not) return sim;
+    }
+  }
+  return netinfo.radio['Sim 1'];
+};
+
 const net_type = (netinfo, linkspeed, suff = '') => {
   let nettype = '';
   if (netinfo) {
@@ -42,7 +59,7 @@ const net_type = (netinfo, linkspeed, suff = '') => {
       }`;
     else {
       if (netinfo?.radio) {
-        let s1 = netinfo.radio['Sim 1'];
+        let s1 = data_sim(netinfo);
         nettype = s1.NetworkType;
       } else nettype = netinfo?.details?.cellularGeneration?.toUpperCase();
     }
@@ -108,4 +125,4 @@ class Speed extends React.Component {
 }
 
 export default Speed;
-export {measureDownloadSpeed, net_type};
+export {measureDownloadSpeed, net_type, data_sim};

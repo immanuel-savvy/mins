@@ -1,10 +1,10 @@
 import React from 'react';
 import Bg_view from './bg_view';
-import {wp} from '../utils/dimensions';
+import {hp, wp} from '../utils/dimensions';
 import Fr_text from './fr_text';
 import Icon from './icon';
 import {App_data} from '../../Contexts';
-import {net_type} from '../screens/Speed';
+import {data_sim, net_type} from '../screens/Speed';
 
 class Speed_header extends React.Component {
   constructor(props) {
@@ -20,6 +20,8 @@ class Speed_header extends React.Component {
       <App_data.Consumer>
         {({netinfo, location, isp}) => {
           netinfo = netinfo ? {...netinfo, ...isp} : netinfo;
+
+          let sim2 = data_sim(netinfo, true);
 
           return (
             <Bg_view
@@ -82,8 +84,19 @@ class Speed_header extends React.Component {
                     <Fr_text style={{color: '#fff', fontSize: 18}} bold>
                       Frequency
                     </Fr_text>
-                    <Fr_text style={{color: '#fff', fontSize: 18}} capitalise>
+                    <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
                       {netinfo?.details.frequency}
+                    </Fr_text>
+                  </>
+                ) : netinfo.radio['Sim 2']?.Net?.cellIdentity ? (
+                  <>
+                    <Fr_text
+                      style={{color: '#fff', fontSize: 16, marginTop: hp(0.7)}}
+                      bold>
+                      Dual Sim
+                    </Fr_text>
+                    <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
+                      {sim2.Net.operator} ({sim2.NetworkType})
                     </Fr_text>
                   </>
                 ) : null}
