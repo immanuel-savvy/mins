@@ -123,13 +123,15 @@ class Speed_header extends React.Component {
                   no_bg>
                   <Bg_view no_bg>
                     <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
-                      {sim2.Net.operator} ({sim2.NetworkType})
+                      {netinfo?.radio['Sim 1']?.Net.operator} (
+                      {netinfo?.radio['Sim 1']?.NetworkType})
                     </Fr_text>
                   </Bg_view>
-                  {sim2?.Net ? (
+                  {netinfo?.radio['Sim 2']?.NetworkType ? (
                     <Bg_view no_bg>
                       <Fr_text style={{color: '#fff', fontSize: 16}} capitalise>
-                        {sim2.Net.operator} ({sim2.NetworkType})
+                        {netinfo?.radio['Sim 2']?.Net.operator} (
+                        {netinfo?.radio['Sim 2']?.NetworkType})
                       </Fr_text>
                     </Bg_view>
                   ) : null}
