@@ -16,7 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //
 import Splash from './src/screens/Splash';
 import {hp, wp} from './src/utils/dimensions';
-import Speed, {net_type} from './src/screens/Speed';
+import Speed, {measureDownloadSpeed, net_type} from './src/screens/Speed';
 import Networks from './src/screens/Networks';
 import History from './src/screens/History';
 import Settings from './src/screens/Settings';
@@ -25,6 +25,8 @@ import {App_data, Networks_data, Test_history} from './Contexts';
 import toast from './src/utils/toast';
 import {copy_object} from './src/utils/functions';
 import {mock} from './nottess';
+import BackgroundFetch from 'react-native-background-fetch';
+import {_3mb} from './src/components/speed_stats';
 
 const {RadioParameters} = NativeModules;
 
@@ -222,6 +224,19 @@ function convertCallStateToText(callState) {
   }
 }
 
+function plmn_to_name(plmn) {
+  switch (plmn) {
+    case '62120':
+      return 'Airtel';
+    case '62130':
+      return 'MTN';
+    case '62150':
+      return 'Glo';
+    case '62160':
+      return '9mobile';
+  }
+}
+
 function filterArray(originalArray) {
   let new_arr = [];
   for (let o = 0; o < originalArray.length; o++) {
@@ -229,7 +244,7 @@ function filterArray(originalArray) {
     let pass;
     for (let n = 0; n < new_arr.length; n++) {
       let na = new_arr[n];
-      if (na.operator === oa.operator || na.mnc === oa.mnc) {
+      if (na?.operator === oa?.operator || na.mnc === oa.mnc) {
         pass = true;
         break;
       }
@@ -262,17 +277,13 @@ class Mins extends React.Component {
       convertPhoneTypeToText(n),
     );
 
-    // netinfos.map((n, ni) => {
-    //   // console.log(JSON.stringify(n, null, 2));
-    //   let nt = netinfos_.find(
-    //     net => n.operator === net.operator && n.mnc === net.mnc,
-    //     // n.mcc === net.mcc,
-    //   );
-    //   if (!nt) netinfos_.push(n);
-    //   console.log(JSON.stringify(netinfos_, null, 2), 'LOLA IS GREY' + ni);
-    // });
-
-    let val_arr = [netinfos, callstates, phonetypes, simstate, networktype];
+    let val_arr = mock || [
+      netinfos,
+      callstates,
+      phonetypes,
+      simstate,
+      networktype,
+    ];
 
     val_arr[0] = filterArray(val_arr[0]);
 
@@ -291,6 +302,7 @@ class Mins extends React.Component {
       let sim = `Sim ${i + 1}`;
       if (!sims[sim]) sims[sim] = new Object();
 
+      val_arr[0][i].operator = plmn_to_name(val_arr[0][i].plmn);
       val_arr.map((v, k) => {
         sims[sim][val_names[k]] = v[i];
       });
@@ -310,6 +322,7 @@ class Mins extends React.Component {
       fetch('http://ip-api.com/json/')
         .then(data => data.json())
         .then(res => {
+          if (res?.as) res.as = res.as.split(' ')[0];
           this.setState({isp: res});
         })
         .catch(e => console.log(e, 'WHYY'));
@@ -327,10 +340,57 @@ class Mins extends React.Component {
     });
   };
 
+  background_process = () => {
+    BackgroundFetch.configure(
+      {
+        minimumFetchInterval: 60 * 4, // minimum interval in minutes
+        stopOnTerminate: false, // continue running after the app is terminated
+        startOnBoot: true, // start when the device boots up
+      },
+      async taskId => {
+        await this.refresh_network();
+        let {netinfo, isp} = this.state;
+
+        let latency = Number(
+          (
+            (await RadioParameters.measureLatency('mins.giitafrica.com')) * 1000
+          ).toFixed(2),
+        );
+        let download_speed = Number(
+          (await measureDownloadSpeed(`${Server}/download_speed`)).toFixed(2),
+        );
+        let upload_speed = Number(
+          (
+            await RadioParameters.measureUploadSpeed(
+              `${Server}/upload_speed`,
+              _3mb,
+            )
+          ).toFixed(2),
+        );
+
+        let test = {download_speed, upload_speed, latency, ...netinfo, ...isp};
+
+        try {
+          await this.send_to_server(test);
+        } catch (e) {}
+
+        BackgroundFetch.finish(taskId); // signal task completion
+      },
+    );
+    // Start the background task
+    BackgroundFetch.start();
+  };
+
+  send_to_server = async test => {
+    await this.aggregate_network(test, true);
+  };
+
   componentDidMount = async () => {
     await this.requestPhoneStatePermission();
 
     await this.refresh_network();
+
+    let superuser = await AsyncStorage.getItem('superuser');
 
     let get_one_time_location = () => {
       Geolocation.getCurrentPosition(
@@ -352,6 +412,7 @@ class Mins extends React.Component {
                     locality: res.locality,
                   },
                   loading: false,
+                  superuser: !!superuser,
                 },
                 async () =>
                   await AsyncStorage.setItem(
@@ -375,7 +436,12 @@ class Mins extends React.Component {
           this.fetch_local_tion()
             .then(location => {
               this.setState(
-                {loading: false, location, location_info: location},
+                {
+                  loading: false,
+                  location,
+                  location_info: location,
+                  superuser: !!superuser,
+                },
                 get_one_time_location,
               );
             })
@@ -390,7 +456,7 @@ class Mins extends React.Component {
     };
 
     setTimeout(() => {
-      this.setState({loading: false});
+      this.setState({loading: false, superuser: !!superuser});
     }, 2500);
 
     get_one_time_location();
@@ -439,16 +505,18 @@ class Mins extends React.Component {
     emitter.remove_listener('new_test', this.new_test);
   };
 
-  persist_history = async () => {
-    let {history} = this.state;
+  persist_history = async test => {
+    let {history, netinfo} = this.state;
 
     await AsyncStorage.setItem('history', JSON.stringify(history));
 
-    this.aggregate_network(copy_object(history[0]));
+    if (!test)
+      netinfo?.type !== 'wifi' &&
+        this.aggregate_network(copy_object(history[0]));
   };
 
   get_isp = n => {
-    return `${n.netinfo.isp} ${net_type(n.netinfo, true)}`;
+    return `${n.netinfo.isp}`;
   };
 
   get_net = test => {
@@ -465,21 +533,7 @@ class Mins extends React.Component {
     return `${o?.location?.locality}-${o?.location?.city}-${o?.location?.countryName}`.toLowerCase();
   };
 
-  aggregate_network = async test => {
-    let has_net;
-
-    let my_net = this.get_net(test);
-    has_net = !!my_net;
-
-    if (has_net) {
-      if (
-        my_net.download_speed > test.download_speed &&
-        my_net.upload_speed > test.upload_speed &&
-        my_net.latency < test.latency
-      )
-        return;
-    }
-
+  aggregate_network = async (test, bg) => {
     test.isp = this.get_isp(test);
     test.area = this.get_area(test);
     fetch(`${Server}/aggregate_network`, {
@@ -492,6 +546,7 @@ class Mins extends React.Component {
     })
       .then(data => data.json())
       .then(res => {
+        if (bg) return;
         let {networks} = this.state;
         networks = networks.map(n => {
           if (n.area === test.area && n.isp === test.isp) return res;
@@ -555,6 +610,46 @@ class Mins extends React.Component {
     } catch (err) {
       console.warn(err);
     }
+    let superuser = await AsyncStorage.getItem('superuser');
+    superuser && this.background_process();
+    if (superuser) {
+      // try {
+      //   const granted = await PermissionsAndroid.request(
+      //     PermissionsAndroid.PERMISSIONS.FOREGROUND_SERVICE,
+      //     {
+      //       title: 'Background Process Permission',
+      //       message:
+      //         'This app needs permission to run background processes for optimal functionality.',
+      //       buttonPositive: 'OK',
+      //       buttonNegative: 'Cancel',
+      //     },
+      //   );
+      //   if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+      //     const granted = await PermissionsAndroid.request(
+      //       PermissionsAndroid.PERMISSIONS.RECEIVE_BOOT_COMPLETED,
+      //       {
+      //         title: 'Background Process Permission',
+      //         message:
+      //           'This app needs permission to run background processes for optimal functionality.',
+      //         buttonPositive: 'OK',
+      //         buttonNegative: 'Cancel',
+      //       },
+      //     );
+      //     if (granted === PermissionsAndroid.RESULTS.GRANTED)
+      //       this.background_process();
+      //     else await AsyncStorage.removeItem('superuser');
+      //   } else await AsyncStorage.removeItem('superuser');
+      // } catch (err) {
+      //   console.warn(err);
+      // }
+    }
+  };
+
+  toggle_super_user = async () => {
+    let {superuser} = this.state;
+    this.setState({superuser: !superuser});
+    if (superuser) await AsyncStorage.removeItem('superuser');
+    else await AsyncStorage.setItem('superuser', 'yes');
   };
 
   render = () => {
@@ -566,6 +661,7 @@ class Mins extends React.Component {
       isp,
       location,
       loaded_networks,
+      superuser,
       networks,
     } = this.state;
 
@@ -579,8 +675,10 @@ class Mins extends React.Component {
               value={{
                 location,
                 netinfo,
+                superuser,
                 isp,
                 offline,
+                toggle_super_user: this.toggle_super_user,
                 refresh_network: this.refresh_network,
               }}>
               <Networks_data.Provider
@@ -605,4 +703,4 @@ class Mins extends React.Component {
 }
 
 export default Mins;
-export {emitter, Server};
+export {emitter, Server, plmn_to_name};

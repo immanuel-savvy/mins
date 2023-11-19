@@ -115,10 +115,7 @@ class Networks extends React.Component {
                                   flex
                                   style={{alignItems: 'center'}}>
                                   <Fr_text size={wp(4.5)}>
-                                    {`${
-                                      net.netinfo?.isp?.split(' ')[0] ||
-                                      net.netinfo?.details?.ssid
-                                    } (${net_type(net.netinfo, true, 'Mbps')})`}
+                                    {`${net.netinfo?.isp?.split(' ')[0]}`}
                                   </Fr_text>
                                 </Bg_view>
                                 <Bg_view

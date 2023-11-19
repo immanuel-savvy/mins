@@ -110,3 +110,8 @@ function filterArray(originalArray) {
 // console.log(filteredArray);
 
 export {mock};
+
+// Airtel. : 62120
+// MTN. : 62130
+// glo. : 62150
+// Etisalat: 62160

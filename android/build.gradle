@@ -29,16 +29,8 @@ allprojects {
           }
     }
     repositories {
-    //    exclusiveContent {
-    //        filter {
-    //            includeGroup "com.facebook.react"
-    //        }
-    //        forRepository {
-    //            maven {
-    //                url "$rootDir/../node_modules/react-native/android"
-    //            }
-    //        }
-    //    }
-        // ...
+        maven {
+            url("${project(':react-native-background-fetch').projectDir}/libs")
+        }
     }
 }

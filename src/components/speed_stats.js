@@ -102,10 +102,14 @@ class Speed_stats extends React.Component {
 
         this.setState(
           {
-            starting: false,
             traffic_stats,
           },
-          () => emitter.emit('new_test', traffic_stats),
+          () => {
+            setTimeout(() => {
+              this.setState({starting: false});
+            }, 3500);
+            emitter.emit('new_test', traffic_stats);
+          },
         );
       },
     );
@@ -197,11 +201,11 @@ class Speed_stats extends React.Component {
                       <Bg_view no_bg>
                         <RNSpeedometer
                           labels={labels}
-                          value={current || 0}
+                          value={download_speed || 0}
                           labelStyle={{color: '#f9f059'}}
                           defaultValue={0}
                           size={wp(75)}
-                          maxValue={750}
+                          maxValue={75}
                           allowedDecimals={2}
                         />
                       </Bg_view>
@@ -257,3 +261,4 @@ class Speed_stats extends React.Component {
 }
 
 export default Speed_stats;
+export {_3mb};

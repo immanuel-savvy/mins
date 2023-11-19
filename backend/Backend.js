@@ -26,6 +26,7 @@ app.post('/aggregate_network', (req, res) => {
 
   let network = AREA_NETWORKS.readone({area: test.area, isp: test.isp});
   if (network) {
+    TESTS.write(test);
     if (network.test.download_speed < test.download_speed)
       network.test.download_speed = test.download_speed;
     if (network.test.upload_speed < test.upload_speed)

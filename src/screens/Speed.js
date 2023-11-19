@@ -40,7 +40,7 @@ const data_sim = (netinfo, not = false) => {
     for (let s in netinfo.radio) {
       let sim = netinfo.radio[s];
 
-      if (sim?.Net.operator.toLowerCase().includes(i.toLowerCase())) {
+      if (sim?.Net?.operator?.toLowerCase().includes(i?.toLowerCase())) {
         if (!not) return sim;
       } else if (not) return sim;
     }

@@ -25,6 +25,7 @@
     "react": "18.2.0",
     "react-native": "0.72.6",
     "react-native-animated-numbers": "^0.4.1",
+    "react-native-background-fetch": "^4.2.1",
     "react-native-gesture-handler": "^2.5.0",
     "react-native-modal": "^13.0.1",
     "react-native-network-bandwith-speed": "^3.0.0",

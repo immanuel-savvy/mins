@@ -69,10 +69,7 @@ public class RadioParameters extends ReactContextBaseJavaModule {
         String device = Build.DEVICE;
         String osVersion = Build.VERSION.RELEASE;
         int sdkVersion = Build.VERSION.SDK_INT;
-
-        TelephonyManager telephonyManager = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        String deviceId = telephonyManager.getDeviceId(); // Requires READ_PHONE_STATE permission
-
+        
         // Create a WritableMap to store device information
         WritableMap deviceInfo = Arguments.createMap();
         deviceInfo.putString("brand", brand);
@@ -80,7 +77,6 @@ public class RadioParameters extends ReactContextBaseJavaModule {
         deviceInfo.putString("device", device);
         deviceInfo.putString("osVersion", osVersion);
         deviceInfo.putInt("sdkVersion", sdkVersion);
-        deviceInfo.putString("deviceId", deviceId);
 
         // Resolve the promise with the WritableMap
         promise.resolve(deviceInfo);
