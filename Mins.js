@@ -648,8 +648,10 @@ class Mins extends React.Component {
   toggle_super_user = async () => {
     let {superuser} = this.state;
     this.setState({superuser: !superuser});
-    if (superuser) await AsyncStorage.removeItem('superuser');
-    else await AsyncStorage.setItem('superuser', 'yes');
+    if (superuser) {
+      await AsyncStorage.removeItem('superuser');
+      BackgroundFetch.stop();
+    } else await AsyncStorage.setItem('superuser', 'yes');
   };
 
   render = () => {

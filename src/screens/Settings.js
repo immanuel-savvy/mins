@@ -60,11 +60,17 @@ class Settings extends React.Component {
                     <TouchableOpacity
                       onPress={superuser ? toggle_super_user : this.close}
                       style={{paddingLeft: wp(4)}}>
-                      <Fontisto
-                        name={superuser ? 'toggle-off' : 'toggle-on'}
-                        color="#fff"
-                        size={wp(10)}
-                      />
+                      <View
+                        style={{flexDirection: 'row', alignItems: 'center'}}>
+                        <Fontisto
+                          name={superuser ? 'toggle-off' : 'toggle-on'}
+                          color="#fff"
+                          size={wp(10)}
+                        />
+                        <Fr_text style={{color: '#fff', marginLeft: 10}} bold>
+                          {superuser ? 'ON' : 'OFF'}
+                        </Fr_text>
+                      </View>
                     </TouchableOpacity>
                   </Bg_view>
 
