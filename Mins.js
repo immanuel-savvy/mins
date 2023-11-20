@@ -278,13 +278,7 @@ class Mins extends React.Component {
       convertPhoneTypeToText(n),
     );
 
-    let val_arr = mock || [
-      netinfos,
-      callstates,
-      phonetypes,
-      simstate,
-      networktype,
-    ];
+    let val_arr = [netinfos, callstates, phonetypes, simstate, networktype];
 
     val_arr[0] = filterArray(val_arr[0]);
 
