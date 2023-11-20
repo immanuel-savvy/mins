@@ -109,7 +109,7 @@ class Speed extends React.Component {
           <SafeAreaView>
             <ScrollView showsVerticalScrollIndicator={false}>
               <Bg_view no_bg>
-                <Speed_header />
+                <Speed_header did_start={did_start} />
                 <Bg_view no_bg flex={6}>
                   <Bg_view
                     no_bg

@@ -16,6 +16,8 @@ class Speed_header extends React.Component {
   componentDidMount = async () => {};
 
   render() {
+    let {did_start} = this.props;
+
     return (
       <App_data.Consumer>
         {({netinfo, location, isp}) => {
@@ -93,32 +95,33 @@ class Speed_header extends React.Component {
                         </Bg_view>
                       ) : null}
                     </Bg_view>
+                    {did_start ? (
+                      <Bg_view
+                        no_bg
+                        style={{marginLeft: 10, marginVertical: 20}}
+                        horizontal>
+                        <Fr_text
+                          color="#fff"
+                          bold
+                          size={wp(5.6)}
+                          style={{
+                            marginRight: 10,
+                            borderRightColor: '#fff',
+                            borderRightWidth: 1.2,
+                            paddingRight: 10,
+                          }}>
+                          {netinfo?.type === 'wifi' ? 'WIFI' : 'Mobile Data'}
+                        </Fr_text>
 
-                    <Bg_view
-                      no_bg
-                      style={{marginLeft: 10, marginVertical: 20}}
-                      horizontal>
-                      <Fr_text
-                        color="#fff"
-                        bold
-                        size={wp(5.6)}
-                        style={{
-                          marginRight: 10,
-                          borderRightColor: '#fff',
-                          borderRightWidth: 1.2,
-                          paddingRight: 10,
-                        }}>
-                        {netinfo?.type === 'wifi' ? 'WIFI' : 'Mobile Data'}
-                      </Fr_text>
-
-                      <Fr_text
-                        color="#fff"
-                        size={wp(5.6)}
-                        bold
-                        style={{marginLeft: 0}}>
-                        {netinfo?.isp?.split(' ')[0]}
-                      </Fr_text>
-                    </Bg_view>
+                        <Fr_text
+                          color="#fff"
+                          size={wp(5.6)}
+                          bold
+                          style={{marginLeft: 0}}>
+                          {netinfo?.isp?.split(' ')[0]}
+                        </Fr_text>
+                      </Bg_view>
+                    ) : null}
                     <Bg_view no_bg>
                       <Bg_view
                         no_bg
@@ -126,6 +129,7 @@ class Speed_header extends React.Component {
                         style={{
                           marginLeft: 10,
                           marginBottom: hp(2),
+                          marginTop: did_start ? null : hp(2),
                         }}>
                         <Feather name="map-pin" size={wp(5.6)} color="#fff" />
                         <Fr_text

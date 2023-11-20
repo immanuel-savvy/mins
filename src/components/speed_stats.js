@@ -2,17 +2,10 @@ import React from 'react';
 import Bg_view from './bg_view';
 import Fr_text from './fr_text';
 import {hp, wp} from '../utils/dimensions';
-import RNSpeedometer from 'react-native-speedometer';
 import {CountUp} from 'use-count-up';
-import {
-  TouchableWithoutFeedback,
-  View,
-  NativeModules,
-  Text,
-} from 'react-native';
+import {TouchableWithoutFeedback, View, NativeModules} from 'react-native';
 import {Server, emitter} from '../../Mins';
 import {App_data} from '../../Contexts';
-import {labels} from '../utils/speedo_labels';
 import toast from '../utils/toast';
 import {measureDownloadSpeed} from '../screens/Speed';
 import Speedometer, {
@@ -103,7 +96,9 @@ class Speed_stats extends React.Component {
             ).toFixed(2),
           );
           traffic_stats.upload_speed = upload_speed || 0;
-          this.setState({upload_speed, current: upload_speed});
+          setTimeout(() => {
+            this.setState({upload_speed, current: upload_speed});
+          }, 3200);
         } catch (e) {
           console.log(e.message, 'Upload test failed');
         }
@@ -120,7 +115,7 @@ class Speed_stats extends React.Component {
           () => {
             setTimeout(() => {
               this.setState({starting: false});
-            }, 3500);
+            }, 6500);
             emitter.emit('new_test', traffic_stats);
           },
         );
@@ -140,7 +135,7 @@ class Speed_stats extends React.Component {
           this.refresh_network = refresh_network;
 
           return (
-            <Bg_view flex no_bg style={{paddingVertical: 40}}>
+            <Bg_view flex no_bg style={{paddingTop: 10}}>
               {!did_start ? null : (
                 <Bg_view
                   horizontal
@@ -205,17 +200,17 @@ class Speed_stats extends React.Component {
                 </Bg_view>
               )}
 
-              <Bg_view style={{minHeight: hp(did_start ? 40 : 15)}} no_bg>
+              <Bg_view no_bg flex>
                 {starting ? (
                   <>
                     <Bg_view
-                      style={{alignSelf: 'center', marginTop: hp(10)}}
+                      style={{alignSelf: 'center', marginTop: hp(5)}}
                       no_bg>
                       <Bg_view no_bg>
                         <Speedometer
                           max={75}
                           angle={220}
-                          value={download_speed || upload_speed || 0}
+                          value={upload_speed || download_speed || 0}
                           fontFamily="squada-one">
                           <Background color="transparent" />
                           <Arc />
@@ -241,7 +236,11 @@ class Speed_stats extends React.Component {
                   <Bg_view
                     flex
                     no_bg
-                    style={{justifyContent: 'center', alignItems: 'center'}}>
+                    style={{
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      marginTop: did_start ? hp(5) : 0,
+                    }}>
                     <TouchableWithoutFeedback
                       style={{
                         height: wp(50),
