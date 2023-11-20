@@ -58,6 +58,7 @@ class Speed_header extends React.Component {
                         </Fr_text>
                         <Fr_text
                           numberOfLines={1}
+                          capitalise
                           style={{
                             color: '#fff',
                             fontSize: 18,
@@ -87,9 +88,7 @@ class Speed_header extends React.Component {
                             capitalise>
                             {netinfo?.radio['Sim 2']?.Net?.operator}
                           </Fr_text>
-                          <Fr_text
-                            style={{color: '#fff', fontSize: 16}}
-                            capitalise>
+                          <Fr_text style={{color: '#fff', fontSize: 16}}>
                             {netinfo?.radio['Sim 2']?.NetworkType}
                           </Fr_text>
                         </Bg_view>
