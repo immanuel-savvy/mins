@@ -162,12 +162,11 @@ class History extends React.Component {
                                     paddingLeft: wp(1.4),
                                   }}>
                                   <Fr_text size={wp(4)}>
-                                    {`${
-                                      net.netinfo?.details?.carrier
-                                        ? net.netinfo?.isp?.split(' ')[0] ||
-                                          net.netinfo.details.carrier
-                                        : net.netinfo?.details?.ssid
-                                    } (${net_type(net.netinfo, true, 'Mbps')})`}
+                                    {`${net.netinfo?.isp?.split(' ')[0]} (${
+                                      net.netinfo.type === 'wifi'
+                                        ? 'WIFI'
+                                        : net_type(net.netinfo, true)
+                                    })`}
                                   </Fr_text>
                                 </Bg_view>
 
