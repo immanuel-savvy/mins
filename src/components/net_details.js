@@ -68,6 +68,7 @@ class Net_details extends React.Component {
               textStyle={{
                 fontWeight: '900',
                 color: '#fff',
+                fontFamily: 'segoeuil',
                 textAlign: 'center',
               }}
               data={['Property', 'Value']}
@@ -85,6 +86,7 @@ class Net_details extends React.Component {
                   textStyle={{
                     fontSize: wp(4),
                     color: '#fff',
+                    fontFamily: 'segoeuil',
                     textAlign: 'center',
                     textTransform: 'capitalize',
                   }}

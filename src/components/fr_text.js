@@ -28,7 +28,7 @@ class Fr_text extends React.Component {
       style.textTransform = caps ? 'uppercase' : 'capitalize';
     if (color) style.color = color;
     if (accent) style.color = typeof accent === 'string' ? accent : '#f9f059';
-    if (bold) style.fontWeight = bold === '900' ? '900' : 'bold';
+    if (bold) style.fontWeight = bold === '900' ? '900' : '500';
     if (size) style.fontSize = size;
     if (centralise) style.textAlign = 'center';
     if (line_height) style.lineHeight = line_height;
@@ -42,6 +42,7 @@ class Fr_text extends React.Component {
           fontSize: wp(4),
           color: '#000',
           ...style,
+          fontFamily: 'segoeuil',
         }}>
         {children}
       </Text>

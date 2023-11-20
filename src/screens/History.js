@@ -20,6 +20,7 @@ import List_empty from '../components/listempty';
 import {bps_to_mbps, date_string} from '../utils/functions';
 import Net_details from '../components/net_details';
 import {net_type} from './Speed';
+import RadialGradient from 'react-native-radial-gradient';
 
 class History extends React.Component {
   constructor(props) {
@@ -47,197 +48,209 @@ class History extends React.Component {
       <Test_history.Consumer>
         {({history}) => {
           return (
-            <Bg_view
-              flex
-              style={{
-                backgroundColor: '#006dbb',
-              }}>
-              <StatusBar barStyle="light-content" backgroundColor="#006dbb" />
-              <Bg_view no_bg>
-                <Bg_view
-                  horizontal
-                  no_bg
-                  style={{
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-end',
-                    paddingHorizontal: wp(4),
-                  }}>
-                  <View style={{flex: 1}} />
-                  <View style={{flex: 1, alignItems: 'center'}}>
-                    <Icon
-                      icon={require('./../assets/icons/logo_mins.png')}
-                      style={{height: wp(25), width: wp(25)}}
-                    />
-                  </View>
-                  <View
-                    style={{
-                      flex: 1,
-                      alignItems: 'flex-end',
-                      justifyContent: 'flex-end',
-                    }}>
-                    <Text_btn
-                      text="Clear history"
-                      color="#eee"
-                      action={this.clear}
-                      bold
-                    />
-                  </View>
-                </Bg_view>
-              </Bg_view>
-
+            <RadialGradient
+              style={{flex: 1}}
+              colors={['#019cff', '#006dbb']}
+              stops={[0.1, 1]}
+              center={[wp(50), hp(50)]}
+              radius={wp(75)}>
               <Bg_view
                 flex
                 no_bg
                 style={{
-                  margin: wp(4),
-                  paddingTop: wp(2.8),
-                  borderRadius: wp(2.8),
+                  backgroundColor: '#006dbb',
                 }}>
-                <Bg_view
-                  horizontal
-                  no_bg
-                  style={{
-                    borderBottomWidth: 4,
-                    borderBottomColor: '#006dbb',
-                    paddingHorizontal: wp(2.8),
-                    minHeight: hp(5),
-                  }}>
-                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                    <Fr_text bold color="#fff" size={wp(4)}>
-                      Type
-                    </Fr_text>
-                  </Bg_view>
-                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                    <Fr_text bold color="#fff" size={wp(4)}>
-                      Date
-                    </Fr_text>
-                  </Bg_view>
-                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                    <Fr_text bold color="#fff" size={wp(4)}>
-                      Latency
-                    </Fr_text>
-                  </Bg_view>
-                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                    <Feather name="download" color="#fff" size={wp(5)} />
-                  </Bg_view>
-                  <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
-                    <Feather name="upload" color="#fff" size={wp(5)} />
+                <StatusBar barStyle="light-content" backgroundColor="#006dbb" />
+                <Bg_view no_bg>
+                  <Bg_view
+                    horizontal
+                    no_bg
+                    style={{
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-end',
+                      paddingHorizontal: wp(4),
+                    }}>
+                    <View style={{flex: 1}} />
+                    <View style={{flex: 1, alignItems: 'center'}}>
+                      <Icon
+                        icon={require('./../assets/icons/logo_mins.png')}
+                        style={{height: wp(25), width: wp(25)}}
+                      />
+                    </View>
+                    <View
+                      style={{
+                        flex: 1,
+                        alignItems: 'flex-end',
+                        justifyContent: 'flex-end',
+                      }}>
+                      <Text_btn
+                        text="Clear history"
+                        color="#eee"
+                        action={this.clear}
+                        bold
+                      />
+                    </View>
                   </Bg_view>
                 </Bg_view>
-                <ScrollView showVerticalScrollIndicator={false}>
-                  {!history ? (
-                    <Bg_view style={{borderRadius: wp(2.8), padding: wp(4)}}>
-                      <ActivityIndicator color="#006dbb" size="large" />
+
+                <Bg_view
+                  flex
+                  no_bg
+                  style={{
+                    margin: wp(4),
+                    paddingTop: wp(2.8),
+                    borderRadius: wp(2.8),
+                  }}>
+                  <Bg_view
+                    horizontal
+                    no_bg
+                    style={{
+                      borderBottomWidth: 4,
+                      borderBottomColor: '#006dbb',
+                      paddingHorizontal: wp(2.8),
+                      minHeight: hp(5),
+                    }}>
+                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                      <Fr_text bold color="#fff" size={wp(4)}>
+                        Type
+                      </Fr_text>
                     </Bg_view>
-                  ) : history.length ? (
-                    history.map((net, j) => {
-                      return (
-                        <TouchableNativeFeedback
-                          key={j}
-                          onPress={() => this.net_details(net)}>
-                          <View>
-                            <Bg_view
-                              horizontal
-                              style={{
-                                borderBottomWidth: 4,
-                                borderBottomColor: '#006dbb',
-                                paddingVertical: hp(1.4),
-                                paddingHorizontal: wp(2.8),
-                                minHeight: hp(7.5),
-                                borderRadius: wp(2.8),
-                              }}>
+                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                      <Fr_text bold color="#fff" size={wp(4)}>
+                        Date
+                      </Fr_text>
+                    </Bg_view>
+                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                      <Fr_text bold color="#fff" size={wp(4)}>
+                        Latency
+                      </Fr_text>
+                    </Bg_view>
+                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                      <Feather name="download" color="#fff" size={wp(5)} />
+                    </Bg_view>
+                    <Bg_view no_bg flex={1} style={{alignItems: 'center'}}>
+                      <Feather name="upload" color="#fff" size={wp(5)} />
+                    </Bg_view>
+                  </Bg_view>
+                  <ScrollView showVerticalScrollIndicator={false}>
+                    {!history ? (
+                      <Bg_view style={{borderRadius: wp(2.8), padding: wp(4)}}>
+                        <ActivityIndicator color="#006dbb" size="large" />
+                      </Bg_view>
+                    ) : history.length ? (
+                      history.map((net, j) => {
+                        return (
+                          <TouchableNativeFeedback
+                            key={j}
+                            onPress={() => this.net_details(net)}>
+                            <View>
                               <Bg_view
-                                no_bg
-                                flex
+                                horizontal
                                 style={{
-                                  justifyContent: 'center',
-                                  paddingLeft: wp(1.4),
+                                  borderBottomWidth: 4,
+                                  borderBottomColor: '#006dbb',
+                                  paddingVertical: hp(1.4),
+                                  paddingHorizontal: wp(2.8),
+                                  minHeight: hp(7.5),
+                                  borderRadius: wp(2.8),
                                 }}>
-                                <Fr_text size={wp(4)}>
-                                  {`${
-                                    net.netinfo?.details?.carrier
-                                      ? net.netinfo?.isp?.split(' ')[0] ||
-                                        net.netinfo.details.carrier
-                                      : net.netinfo?.details?.ssid
-                                  } (${net_type(net.netinfo, true, 'Mbps')})`}
-                                </Fr_text>
-                              </Bg_view>
+                                <Bg_view
+                                  no_bg
+                                  flex
+                                  style={{
+                                    justifyContent: 'center',
+                                    paddingLeft: wp(1.4),
+                                  }}>
+                                  <Fr_text size={wp(4)}>
+                                    {`${
+                                      net.netinfo?.details?.carrier
+                                        ? net.netinfo?.isp?.split(' ')[0] ||
+                                          net.netinfo.details.carrier
+                                        : net.netinfo?.details?.ssid
+                                    } (${net_type(net.netinfo, true, 'Mbps')})`}
+                                  </Fr_text>
+                                </Bg_view>
 
-                              <Bg_view
-                                no_bg
-                                flex
-                                style={{
-                                  justifyContent: 'center',
-                                  paddingLeft: wp(1.4),
-                                }}>
-                                <Fr_text size={wp(3)} bold centralise>
-                                  {date_string(net.timestamp)}
-                                </Fr_text>
-                              </Bg_view>
+                                <Bg_view
+                                  no_bg
+                                  flex
+                                  style={{
+                                    justifyContent: 'center',
+                                    paddingLeft: wp(1.4),
+                                  }}>
+                                  <Fr_text size={wp(3)} bold centralise>
+                                    {date_string(net.timestamp)}
+                                  </Fr_text>
+                                </Bg_view>
 
-                              <Bg_view
-                                no_bg
-                                flex
-                                style={{
-                                  justifyContent: 'center',
-                                  paddingLeft: wp(1.4),
-                                }}>
-                                <Fr_text size={wp(4)} centralise>
-                                  {`${net.latency || '-'} ms`}
-                                </Fr_text>
-                              </Bg_view>
+                                <Bg_view
+                                  no_bg
+                                  flex
+                                  style={{
+                                    justifyContent: 'center',
+                                    paddingLeft: wp(1.4),
+                                  }}>
+                                  <Fr_text size={wp(4)} centralise>
+                                    {`${net.latency || '-'} ms`}
+                                  </Fr_text>
+                                </Bg_view>
 
-                              <Bg_view
-                                no_bg
-                                flex
-                                style={{
-                                  justifyContent: 'center',
-                                  paddingLeft: wp(1.4),
-                                }}>
-                                <Fr_text size={wp(4)} centralise>
-                                  {net?.download_speed}
-                                </Fr_text>
-                              </Bg_view>
+                                <Bg_view
+                                  no_bg
+                                  flex
+                                  style={{
+                                    justifyContent: 'center',
+                                    paddingLeft: wp(1.4),
+                                  }}>
+                                  <Fr_text size={wp(4)} centralise>
+                                    {net?.download_speed}
+                                  </Fr_text>
+                                </Bg_view>
 
-                              <Bg_view
-                                no_bg
-                                flex
-                                style={{
-                                  justifyContent: 'center',
-                                  paddingLeft: wp(1.4),
-                                }}>
-                                <Fr_text size={wp(4)} centralise>
-                                  {net?.upload_speed}
-                                </Fr_text>
+                                <Bg_view
+                                  no_bg
+                                  flex
+                                  style={{
+                                    justifyContent: 'center',
+                                    paddingLeft: wp(1.4),
+                                  }}>
+                                  <Fr_text size={wp(4)} centralise>
+                                    {net?.upload_speed}
+                                  </Fr_text>
+                                </Bg_view>
                               </Bg_view>
-                            </Bg_view>
-                          </View>
-                        </TouchableNativeFeedback>
-                      );
-                    })
-                  ) : (
-                    <List_empty
-                      style={{borderRadius: wp(4)}}
-                      text="No test history yet."
-                    />
-                  )}
-                </ScrollView>
+                            </View>
+                          </TouchableNativeFeedback>
+                        );
+                      })
+                    ) : (
+                      <List_empty
+                        style={{borderRadius: wp(4)}}
+                        text="No test history yet."
+                      />
+                    )}
+                  </ScrollView>
+                </Bg_view>
+
+                <Cool_modal
+                  ref={clear_modal => (this.clear_modal = clear_modal)}>
+                  <Confirm_clear_history
+                    toggle={this.clear}
+                    proceed={() => emitter.emit('clear_history')}
+                  />
+                </Cool_modal>
+
+                <Cool_modal
+                  no_swipe
+                  flex
+                  ref={details => (this.details = details)}>
+                  <Net_details
+                    net={net_in_focus}
+                    toggle={this.toggle_details}
+                  />
+                </Cool_modal>
               </Bg_view>
-
-              <Cool_modal ref={clear_modal => (this.clear_modal = clear_modal)}>
-                <Confirm_clear_history
-                  toggle={this.clear}
-                  proceed={() => emitter.emit('clear_history')}
-                />
-              </Cool_modal>
-
-              <Cool_modal
-                no_swipe
-                flex
-                ref={details => (this.details = details)}>
-                <Net_details net={net_in_focus} toggle={this.toggle_details} />
-              </Cool_modal>
-            </Bg_view>
+            </RadialGradient>
           );
         }}
       </Test_history.Consumer>

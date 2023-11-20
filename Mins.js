@@ -66,6 +66,7 @@ class Index extends React.Component {
           tabBarActiveBackgroundColor: '#eee',
           tabBarStyle: {
             height: hp(9),
+            fontFamily: 'segoeuil',
             justifyContent: 'center',
             paddingBottom: hp(1),
           },
@@ -302,7 +303,11 @@ class Mins extends React.Component {
       let sim = `Sim ${i + 1}`;
       if (!sims[sim]) sims[sim] = new Object();
 
-      val_arr[0][i].operator = plmn_to_name(val_arr[0][i].plmn);
+      if (val_arr[0][i]?.operator) {
+        if (!val_arr[0][i].plmn)
+          val_arr[0][i].plmn = `${val_arr[0][i].mcc}${val_arr[0][i].mnc}`;
+        val_arr[0][i].operator = plmn_to_name(val_arr[0][i]?.plmn);
+      }
       val_arr.map((v, k) => {
         sims[sim][val_names[k]] = v[i];
       });
@@ -536,6 +541,11 @@ class Mins extends React.Component {
   aggregate_network = async (test, bg) => {
     test.isp = this.get_isp(test);
     test.area = this.get_area(test);
+    if (!test.isp || !test.area) return;
+
+    if (!['airtel', 'mtn', '9mobile', 'glo'].includes(test?.isp?.toLowerCase()))
+      return;
+
     fetch(`${Server}/aggregate_network`, {
       method: 'post',
       headers: {

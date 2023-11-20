@@ -4,12 +4,25 @@ import Fr_text from './fr_text';
 import {hp, wp} from '../utils/dimensions';
 import RNSpeedometer from 'react-native-speedometer';
 import {CountUp} from 'use-count-up';
-import {TouchableWithoutFeedback, View, NativeModules} from 'react-native';
+import {
+  TouchableWithoutFeedback,
+  View,
+  NativeModules,
+  Text,
+} from 'react-native';
 import {Server, emitter} from '../../Mins';
 import {App_data} from '../../Contexts';
 import {labels} from '../utils/speedo_labels';
 import toast from '../utils/toast';
 import {measureDownloadSpeed} from '../screens/Speed';
+import Speedometer, {
+  Background,
+  Arc,
+  Needle,
+  Progress,
+  Marks,
+  Indicator,
+} from 'react-native-cool-speedometer';
 
 const {RadioParameters} = NativeModules;
 
@@ -199,7 +212,20 @@ class Speed_stats extends React.Component {
                       style={{alignSelf: 'center', marginTop: hp(10)}}
                       no_bg>
                       <Bg_view no_bg>
-                        <RNSpeedometer
+                        <Speedometer
+                          max={75}
+                          angle={220}
+                          value={download_speed || upload_speed || 0}
+                          fontFamily="squada-one">
+                          <Background color="transparent" />
+                          <Arc />
+                          <Needle />
+                          <Progress>{(value, textProps) => null}</Progress>
+                          <Marks />
+                          <Indicator>{(value, textProps) => null}</Indicator>
+                        </Speedometer>
+
+                        {/* <RNSpeedometer
                           labels={labels}
                           value={download_speed || 0}
                           labelStyle={{color: '#f9f059'}}
@@ -207,7 +233,7 @@ class Speed_stats extends React.Component {
                           size={wp(75)}
                           maxValue={75}
                           allowedDecimals={2}
-                        />
+                        /> */}
                       </Bg_view>
                     </Bg_view>
                   </>
