@@ -10,6 +10,7 @@ import {App_data} from '../../Contexts';
 import Cool_modal from '../components/cool_modal';
 import Confirm_superuser from '../components/confirm_superuser';
 import RadialGradient from 'react-native-radial-gradient';
+import Data_dialog from '../components/toggle_data_dialog';
 
 class Settings extends React.Component {
   constructor(props) {
@@ -20,7 +21,11 @@ class Settings extends React.Component {
 
   close = () => this.close_modal?.toggle();
 
+  toggle_data = () => this.data_modal?.toggle();
+
   render() {
+    let {navigation} = this.props;
+
     return (
       <App_data.Consumer>
         {({superuser, toggle_super_user}) => {
@@ -51,10 +56,12 @@ class Settings extends React.Component {
                         paddingHorizontal: wp(4),
                       }}>
                       <View style={{flex: 1, alignItems: 'center'}}>
-                        <Icon
-                          icon={require('./../assets/icons/logo_mins.png')}
-                          style={{height: wp(25), width: wp(25)}}
-                        />
+                        <TouchableOpacity onLongPress={this.toggle_data}>
+                          <Icon
+                            icon={require('./../assets/icons/logo_mins.png')}
+                            style={{height: wp(25), width: wp(25)}}
+                          />
+                        </TouchableOpacity>
                       </View>
                     </Bg_view>
                   </Bg_view>
@@ -120,6 +127,16 @@ class Settings extends React.Component {
                   <Confirm_superuser
                     toggle={this.close}
                     proceed={toggle_super_user}
+                  />
+                </Cool_modal>
+
+                <Cool_modal ref={data_modal => (this.data_modal = data_modal)}>
+                  <Data_dialog
+                    toggle={this.toggle_data}
+                    proceed={() => {
+                      // toggle_show_data()
+                      navigation.navigate('data');
+                    }}
                   />
                 </Cool_modal>
               </Bg_view>

@@ -1,6 +1,11 @@
 import express from 'express';
 import cors from 'cors';
-import ds_conn, {AREA_NETWORKS, TESTS} from './ds/conn';
+import ds_conn, {
+  AREA_NETWORKS,
+  GLOBALS,
+  LOCATION_TESTS,
+  TESTS,
+} from './ds/conn';
 import bodyParser from 'body-parser';
 
 const app = express();
@@ -21,12 +26,27 @@ app.post('/upload_speed', (req, res) => {
   res.end();
 });
 
+app.post('/location_history', (req, res) => {
+  let {location} = req.body;
+
+  res.json(LOCATION_TESTS.read({area: location}).map(loc => loc.test));
+});
+
+app.get('/locations', (req, res) => {
+  let locations = GLOBALS.readone({global: 'locations'});
+  res.json(locations.locations);
+});
+
 app.post('/aggregate_network', (req, res) => {
   let {test} = req.body;
 
-  let network = AREA_NETWORKS.readone({area: test.area, isp: test.isp});
+  let network = AREA_NETWORKS.readone({area: test.area, isp: test.isp}),
+    test_id;
+
   if (network) {
-    TESTS.write(test);
+    test_id = TESTS.write(test);
+    test_id = test_id._id;
+
     if (network.test.download_speed < test.download_speed)
       network.test.download_speed = test.download_speed;
     if (network.test.upload_speed < test.upload_speed)
@@ -42,10 +62,16 @@ app.post('/aggregate_network', (req, res) => {
     test = network.test;
   } else {
     let result = TESTS.write(test);
+    test_id = result._id;
     test._id = result._id;
     test.created = result.created;
     AREA_NETWORKS.write({area: test.area, isp: test.isp, test: result._id});
   }
+
+  LOCATION_TESTS.write({area: test.area, test: test_id});
+  let loc_globe = GLOBALS.readone({global: 'locations', locations: test.area});
+  !loc_globe &&
+    GLOBALS.update({global: 'locations'}, {locations: {$push: test.area}});
 
   res.json(test);
 });
@@ -59,5 +85,7 @@ app.post('/networks', (req, res) => {
 app.listen(3700, () => {
   ds_conn();
 
+  !GLOBALS.readone({global: 'locations'}) &&
+    GLOBALS.write({global: 'locations', locations: new Array()});
   console.log('Mins Backend started on :3700');
 });

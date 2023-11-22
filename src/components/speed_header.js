@@ -90,7 +90,7 @@ class Speed_header extends React.Component {
                           <Fr_text
                             style={{
                               color: '#fff',
-                              fontSize: 18,
+                              fontSize: 16,
                             }}
                             capitalise>
                             {netinfo?.radio['Sim 2']?.Net?.operator}

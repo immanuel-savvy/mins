@@ -11,7 +11,11 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 //
 import Splash from './src/screens/Splash';
 import {hp, wp} from './src/utils/dimensions';
-import Speed, {measureDownloadSpeed, net_type} from './src/screens/Speed';
+import Speed, {
+  as_to_name,
+  measureDownloadSpeed,
+  net_type,
+} from './src/screens/Speed';
 import Networks from './src/screens/Networks';
 import History from './src/screens/History';
 import Settings from './src/screens/Settings';
@@ -22,6 +26,7 @@ import {copy_object} from './src/utils/functions';
 import {mock} from './nottess';
 import BackgroundFetch from 'react-native-background-fetch';
 import {_3mb} from './src/components/speed_stats';
+import Data from './src/screens/Data';
 
 const {RadioParameters} = NativeModules;
 
@@ -132,6 +137,8 @@ class App_stack_entry extends React.Component {
   }
 
   render = () => {
+    let {show} = this.props;
+
     return (
       <App_stack.Navigator
         initialRouteName="index"
@@ -142,6 +149,7 @@ class App_stack_entry extends React.Component {
           animationEnabled: true,
         }}>
         <App_stack.Screen name="index" component={Index} />
+        <App_stack.Screen name="data" component={Data} />
       </App_stack.Navigator>
     );
   };
@@ -386,6 +394,7 @@ class Mins extends React.Component {
     await this.refresh_network();
 
     let superuser = await AsyncStorage.getItem('superuser');
+    let show_data = await AsyncStorage.getItem('showdata');
 
     let get_one_time_location = () => {
       Geolocation.getCurrentPosition(
@@ -408,6 +417,7 @@ class Mins extends React.Component {
                   },
                   loading: false,
                   superuser: !!superuser,
+                  show_data: !!show_data,
                 },
                 async () =>
                   await AsyncStorage.setItem(
@@ -436,6 +446,7 @@ class Mins extends React.Component {
                   location,
                   location_info: location,
                   superuser: !!superuser,
+                  show_data: !!show_data,
                 },
                 get_one_time_location,
               );
@@ -511,7 +522,7 @@ class Mins extends React.Component {
   };
 
   get_isp = n => {
-    return `${n.netinfo.isp}`;
+    return n.netinfo?.isp;
   };
 
   get_net = test => {
@@ -525,15 +536,23 @@ class Mins extends React.Component {
   };
 
   get_area = o => {
-    return `${o?.location?.locality}-${o?.location?.city}-${o?.location?.countryName}`.toLowerCase();
+    return o?.location?.locality
+      ? `${o?.location?.locality}-${o?.location?.city}-${o?.location?.countryName}`.toLowerCase()
+      : null;
   };
 
   aggregate_network = async (test, bg) => {
     test.isp = this.get_isp(test);
     test.area = this.get_area(test);
+    console.log(test.isp, test.area, 'YOOOOOO');
+
     if (!test.isp || !test.area) return;
 
-    if (!['airtel', 'mtn', '9mobile', 'glo'].includes(test?.isp?.toLowerCase()))
+    if (
+      !['airtel', 'mtn', '9mobile', 'glo'].includes(
+        as_to_name(test)?.toLowerCase(),
+      )
+    )
       return;
 
     fetch(`${Server}/aggregate_network`, {
@@ -654,6 +673,16 @@ class Mins extends React.Component {
     } else await AsyncStorage.setItem('superuser', 'yes');
   };
 
+  toggle_show_data = async () => {
+    let {show_data} = this.state;
+
+    console.log(show_data);
+    this.setState({show_data: !show_data});
+
+    if (show_data) await AsyncStorage.removeItem('showdata');
+    else await AsyncStorage.setItem('showdata', 'true');
+  };
+
   render = () => {
     let {
       loading,
@@ -664,6 +693,7 @@ class Mins extends React.Component {
       location,
       loaded_networks,
       superuser,
+      show_data,
       networks,
     } = this.state;
 
@@ -678,6 +708,8 @@ class Mins extends React.Component {
                 location,
                 netinfo,
                 superuser,
+                toggle_show_data: this.toggle_show_data,
+                show_data: show_data,
                 refresh_network: this.refresh_network,
                 isp,
                 offline,
