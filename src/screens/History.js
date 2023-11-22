@@ -19,7 +19,7 @@ import Confirm_clear_history from '../components/confirm_clear_history';
 import List_empty from '../components/listempty';
 import {bps_to_mbps, date_string} from '../utils/functions';
 import Net_details from '../components/net_details';
-import {net_type} from './Speed';
+import {as_to_name, net_type} from './Speed';
 import RadialGradient from 'react-native-radial-gradient';
 
 class History extends React.Component {
@@ -162,7 +162,7 @@ class History extends React.Component {
                                     paddingLeft: wp(1.4),
                                   }}>
                                   <Fr_text size={wp(4)}>
-                                    {`${net.netinfo?.isp?.split(' ')[0]} (${
+                                    {`${as_to_name(net.netinfo)} (${
                                       net.netinfo.type === 'wifi'
                                         ? 'WIFI'
                                         : net_type(net.netinfo, true)

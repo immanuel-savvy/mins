@@ -208,7 +208,7 @@ class Speed_stats extends React.Component {
                       no_bg>
                       <Bg_view no_bg>
                         <Speedometer
-                          max={75}
+                          max={100}
                           angle={220}
                           value={upload_speed || download_speed || 0}
                           fontFamily="squada-one">

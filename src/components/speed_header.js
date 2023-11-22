@@ -5,6 +5,7 @@ import Fr_text from './fr_text';
 import Icon from './icon';
 import {App_data} from '../../Contexts';
 import Feather from 'react-native-vector-icons/Feather';
+import {as_to_name} from '../screens/Speed';
 
 class Speed_header extends React.Component {
   constructor(props) {
@@ -13,15 +14,23 @@ class Speed_header extends React.Component {
     this.state = {};
   }
 
-  componentDidMount = async () => {};
+  componentDidMount = async () => {
+    if (
+      !this.netinfo?.radio['Sim 1']?.Net &&
+      !this.netinfo?.radio['Sim 2']?.Net
+    )
+      this.refresh_network();
+  };
 
   render() {
     let {did_start} = this.props;
 
     return (
       <App_data.Consumer>
-        {({netinfo, location, isp}) => {
+        {({netinfo, location, isp, refresh_network}) => {
           netinfo = netinfo ? {...netinfo, ...isp} : netinfo;
+          this.netinfo = netinfo;
+          this.refresh_network = refresh_network;
 
           return (
             <Bg_view
@@ -62,7 +71,6 @@ class Speed_header extends React.Component {
                           style={{
                             color: '#fff',
                             fontSize: 18,
-                            marginVertical: hp(0.4),
                           }}>
                           {netinfo?.radio['Sim 1']?.Net?.operator}
                         </Fr_text>
@@ -83,7 +91,6 @@ class Speed_header extends React.Component {
                             style={{
                               color: '#fff',
                               fontSize: 18,
-                              marginVertical: hp(0.4),
                             }}
                             capitalise>
                             {netinfo?.radio['Sim 2']?.Net?.operator}
@@ -117,7 +124,7 @@ class Speed_header extends React.Component {
                           size={wp(5.6)}
                           bold
                           style={{marginLeft: 0}}>
-                          {netinfo?.isp?.split(' ')[0]}
+                          {as_to_name(netinfo)}
                         </Fr_text>
                       </Bg_view>
                     ) : null}
@@ -132,10 +139,14 @@ class Speed_header extends React.Component {
                         }}>
                         <Feather name="map-pin" size={wp(5.6)} color="#fff" />
                         <Fr_text
-                          numberOfLines={1}
-                          style={{color: '#fff', fontSize: 18}}>
+                          style={{
+                            color: '#fff',
+                            fontSize: 18,
+                            marginLeft: wp(2.8),
+                            flexWrap: 'wrap',
+                          }}>
                           {location?.locality
-                            ? ` ${location.locality}, ${location.city}`
+                            ? `${location.locality}, ${location.city}`
                             : '  ...'}
                         </Fr_text>
                       </Bg_view>

@@ -32,6 +32,21 @@ const measureDownloadSpeed = async url => {
   }
 };
 
+const as_to_name = netinfo => {
+  switch (netinfo?.as?.split(' ')[0].slice(2)) {
+    case '36873':
+      return 'Airtel';
+    case '29465':
+      return 'MTN';
+    case '36873':
+      return 'Glo';
+    case '328309':
+      return 'Glo';
+    case '37076':
+      return '9mobile';
+  }
+};
+
 const data_sim = (netinfo, not = false) => {
   if (!netinfo?.radio) return {};
 
@@ -75,8 +90,6 @@ class Speed extends React.Component {
 
     this.state = {};
   }
-
-  componentDidMount = async () => {};
 
   start = () => {
     this.setState({started: true, did_start: true});
@@ -141,4 +154,4 @@ class Speed extends React.Component {
 }
 
 export default Speed;
-export {measureDownloadSpeed, net_type, data_sim};
+export {measureDownloadSpeed, net_type, as_to_name, data_sim};

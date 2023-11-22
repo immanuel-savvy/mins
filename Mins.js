@@ -3,12 +3,7 @@ import 'react-native-gesture-handler';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import {
-  SafeAreaView,
-  View,
-  PermissionsAndroid,
-  NativeModules,
-} from 'react-native';
+import {SafeAreaView, PermissionsAndroid, NativeModules} from 'react-native';
 import Emitter from 'semitter';
 import NetInfo from '@react-native-community/netinfo';
 import Geolocation from '@react-native-community/geolocation';
@@ -297,11 +292,12 @@ class Mins extends React.Component {
       let sim = `Sim ${i + 1}`;
       if (!sims[sim]) sims[sim] = new Object();
 
-      if (val_arr[0][i]?.operator) {
-        if (!val_arr[0][i].plmn)
-          val_arr[0][i].plmn = `${val_arr[0][i].mcc}${val_arr[0][i].mnc}`;
+      if (val_arr[0][i] && !val_arr[0][i]?.plmn)
+        val_arr[0][i].plmn = `${val_arr[0][i].mcc}${val_arr[0][i].mnc}`;
+
+      if (val_arr[0][i]?.operator)
         val_arr[0][i].operator = plmn_to_name(val_arr[0][i]?.plmn);
-      }
+
       val_arr.map((v, k) => {
         sims[sim][val_names[k]] = v[i];
       });
@@ -682,6 +678,7 @@ class Mins extends React.Component {
                 location,
                 netinfo,
                 superuser,
+                refresh_network: this.refresh_network,
                 isp,
                 offline,
                 toggle_super_user: this.toggle_super_user,
