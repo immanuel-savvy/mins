@@ -44,12 +44,12 @@ class Data_dialog extends React.Component {
 
           <Bg_view horizontal style={{justifyContent: 'center'}}>
             <Small_btn
-              title="Allow"
+              title="Proceed"
               action={() => {
                 proceed(), toggle();
               }}
             />
-            <Small_btn title="Cancel" inverted action={toggle} />
+            <Small_btn title="Close" inverted action={toggle} />
           </Bg_view>
         </Bg_view>
       </Bg_view>
