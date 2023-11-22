@@ -7,7 +7,7 @@ import {ActivityIndicator, ScrollView, StatusBar} from 'react-native';
 import {App_data, Networks_data} from '../../Contexts';
 import List_empty from '../components/listempty';
 import {bps_to_mbps} from '../utils/functions';
-import {net_type} from './Speed';
+import {as_to_name, net_type} from './Speed';
 import RadialGradient from 'react-native-radial-gradient';
 
 class Networks extends React.Component {
@@ -118,7 +118,7 @@ class Networks extends React.Component {
                                     flex
                                     style={{alignItems: 'center'}}>
                                     <Fr_text size={wp(4.5)}>
-                                      {`${net.netinfo?.isp?.split(' ')[0]}`}
+                                      {`${as_to_name(net.netinfo)}`}
                                     </Fr_text>
                                   </Bg_view>
                                   <Bg_view

@@ -295,7 +295,7 @@ class Mins extends React.Component {
       if (val_arr[0][i] && !val_arr[0][i]?.plmn)
         val_arr[0][i].plmn = `${val_arr[0][i].mcc}${val_arr[0][i].mnc}`;
 
-      if (val_arr[0][i]?.operator)
+      if (val_arr[0][i]?.plmn)
         val_arr[0][i].operator = plmn_to_name(val_arr[0][i]?.plmn);
 
       val_arr.map((v, k) => {

@@ -33,7 +33,7 @@ const measureDownloadSpeed = async url => {
 };
 
 const as_to_name = netinfo => {
-  switch (netinfo?.as?.split(' ')[0].slice(2)) {
+  switch (netinfo?.as?.slice(2)) {
     case '36873':
       return 'Airtel';
     case '29465':
@@ -44,6 +44,8 @@ const as_to_name = netinfo => {
       return 'Glo';
     case '37076':
       return '9mobile';
+    default:
+      return netinfo?.isp?.split(' ')[0];
   }
 };
 
