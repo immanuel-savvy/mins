@@ -172,6 +172,11 @@ function getNetworkTypeName(networkType) {
     13: 'LTE',
     14: 'eHRPD',
     15: 'HSPA+',
+    19: 'UMTS (TD-SCDMA)',
+    20: 'LTE (TD-LTE)',
+    28: 'LTE (TD-LTE)',
+    30: 'WCDMA (NR)',
+    41: 'LTE (NR)',
     // Add more network types as needed
   };
 

@@ -31,6 +31,10 @@ import android.telephony.CellIdentityCdma;
 import android.telephony.CellIdentityWcdma;
 import android.telephony.CellIdentityGsm;
 import android.telephony.CellSignalStrengthCdma;
+import android.telephony.CellInfoNr;
+import android.telephony.CellIdentityNr;
+import android.telephony.CellSignalStrengthNr;
+import android.telephony.CellIdentity;
 import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.WritableArray;
 import com.facebook.react.bridge.WritableMap;
@@ -334,6 +338,8 @@ private WritableMap getCellInfoMap(CellInfo cellInfo) {
         return getCdmaCellInfoMap((CellInfoCdma) cellInfo);
     } else if (cellInfo instanceof CellInfoWcdma) {
         return getWcdmaCellInfoMap((CellInfoWcdma) cellInfo);
+    }else if (cellInfo instanceof CellInfoNr) {
+        return getNrCellInfoMap((CellInfoWcdma) cellInfo);
     }
 
     return null;
@@ -356,7 +362,9 @@ private List<CellInfo> getAllCellInfoForNetworkType(TelephonyManager telephonyMa
 private int getCellNetworkType(CellInfo cellInfo) {
     if (cellInfo instanceof CellInfoGsm) {
         return TelephonyManager.NETWORK_TYPE_GSM;
-    } else if (cellInfo instanceof CellInfoCdma) {
+    } else if (cellInfo instanceof CellInfoNr) {
+        return TelephonyManager.NETWORK_TYPE_GSM;
+    }else if (cellInfo instanceof CellInfoCdma) {
         return TelephonyManager.NETWORK_TYPE_CDMA;
     } else if (cellInfo instanceof CellInfoLte) {
         return TelephonyManager.NETWORK_TYPE_LTE;
@@ -366,6 +374,45 @@ private int getCellNetworkType(CellInfo cellInfo) {
         // Handle other cell types as needed
         return TelephonyManager.NETWORK_TYPE_UNKNOWN;
     }
+}
+
+private WritableMap getNrCellInfoMap(CellInfo cellInfo) {
+    WritableMap cellInfoMap = Arguments.createMap();
+
+    if (cellInfo instanceof CellInfoNr) {
+        CellInfoNr cellInfoNr = (CellInfoNr) cellInfo;
+        CellIdentity cellIdentity = cellInfoNr.getCellIdentity();
+        CellIdentityNr cellIdentityNr = (CellIdentityNr) cellIdentity;
+
+        cellInfoMap.putInt("nrarfcn", cellIdentityNr.getNrarfcn());
+        cellInfoMap.putDouble("nci", (double) cellIdentityNr.getNci());
+        cellInfoMap.putString("mcc", cellIdentityNr.getMccString());
+        cellInfoMap.putString("mnc", cellIdentityNr.getMncString());
+        cellInfoMap.putInt("cellNetworkType", TelephonyManager.NETWORK_TYPE_NR);
+
+        CellSignalStrength signalStrength = cellInfoNr.getCellSignalStrength();
+        if (signalStrength instanceof CellSignalStrengthNr) {
+            CellSignalStrengthNr signalStrengthNr = (CellSignalStrengthNr) signalStrength;
+            // Now you can use signalStrengthNr to get NR-specific signal strength information
+            int ssRsrp = signalStrengthNr.getSsRsrp();
+            int ssRsrq = signalStrengthNr.getSsRsrq();
+            int ssSinr = signalStrengthNr.getSsSinr();
+            int dbm = signalStrengthNr.getDbm();
+            // Add these values to your WritableMap
+            cellInfoMap.putInt("ssRsrp", ssRsrp);
+            cellInfoMap.putInt("ssRsrq", ssRsrq);
+            cellInfoMap.putInt("ssSinr", ssSinr);
+            cellInfoMap.putInt("dBm", dbm);
+            cellInfoMap.putInt("signalStrengthLevel", signalStrengthNr.getLevel());
+        }
+
+        // NR-TAC (Tracking Area Code)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // cellInfoMap.putInt("nrtac", cellIdentityNr.getTac());
+        }
+    }
+
+    return cellInfoMap;
 }
 
 // Helper method to get WritableMap for GSM CellInfo
