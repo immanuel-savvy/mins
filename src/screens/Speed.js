@@ -53,7 +53,7 @@ const data_sim = (netinfo, not = false) => {
   if (!netinfo?.radio) return {};
 
   if (netinfo.isp) {
-    let i = netinfo.isp.split(' ')[0];
+    let i = as_to_name(netinfo);
 
     for (let s in netinfo.radio) {
       let sim = netinfo.radio[s];
@@ -79,7 +79,10 @@ const net_type = (netinfo, linkspeed, suff = '') => {
       if (netinfo?.radio) {
         let s1 = data_sim(netinfo);
         nettype = s1.NetworkType;
-      } else nettype = netinfo?.details?.cellularGeneration?.toUpperCase();
+      } else {
+        console.log(netinfo.details);
+        nettype = netinfo?.details?.cellularGeneration?.toUpperCase();
+      }
     }
   }
 

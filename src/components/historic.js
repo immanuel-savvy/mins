@@ -123,7 +123,11 @@ class Historic extends React.Component {
                           {`${as_to_name(net.netinfo)} (${
                             net.netinfo.type === 'wifi'
                               ? 'WIFI'
-                              : net_type(net.netinfo, true)
+                              : net_type(net.netinfo, true) ||
+                                net?.netinfo?.details?.cellularGeneration ===
+                                  '4g'
+                              ? 'LTE'
+                              : net?.netinfo?.details?.cellularGeneration
                           })`}
                         </Fr_text>
                       </Bg_view>

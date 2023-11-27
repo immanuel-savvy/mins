@@ -47,12 +47,11 @@ app.post('/aggregate_network', (req, res) => {
     test_id = TESTS.write(test);
     test_id = test_id._id;
 
-    if (network.test.download_speed < test.download_speed)
+    if (network.test.download_speed < test.download_speed) {
       network.test.download_speed = test.download_speed;
-    if (network.test.upload_speed < test.upload_speed)
       network.test.upload_speed = test.upload_speed;
-    if (network.test.latency > test.latency)
       network.test.latency = test.latency;
+    }
 
     TESTS.update(network.test._id, {
       download_speed: network.test.download_speed,

@@ -145,7 +145,7 @@ class App_stack_entry extends React.Component {
         screenOptions={{
           headerShown: false,
           keyboardHandlingEnabled: true,
-          // gestureEnabled: true,
+          gestureEnabled: true,
           animationEnabled: true,
         }}>
         <App_stack.Screen name="index" component={Index} />
@@ -180,7 +180,7 @@ function getNetworkTypeName(networkType) {
     // Add more network types as needed
   };
 
-  return networkTypes[networkType] || 'Unknown';
+  return networkTypes[networkType] || 'LTE';
 }
 
 // Function to convert SIM state to text
@@ -286,7 +286,13 @@ class Mins extends React.Component {
       convertPhoneTypeToText(n),
     );
 
-    let val_arr = [netinfos, callstates, phonetypes, simstate, networktype];
+    let val_arr = mock || [
+      netinfos,
+      callstates,
+      phonetypes,
+      simstate,
+      networktype,
+    ];
 
     val_arr[0] = filterArray(val_arr[0]);
 
@@ -316,7 +322,7 @@ class Mins extends React.Component {
       });
     }
 
-    console.log(JSON.stringify(sims, null, 2));
+    // console.log(JSON.stringify(sims, null, 2));
 
     return sims;
   };
@@ -348,6 +354,38 @@ class Mins extends React.Component {
     });
   };
 
+  network_process = async na => {
+    !na && (await this.refresh_network());
+    let {netinfo, isp, location_info} = this.state;
+
+    let latency = Number(
+      (
+        (await RadioParameters.measureLatency('mins.giitafrica.com')) * 1000
+      ).toFixed(2),
+    );
+    let download_speed = Number(
+      (await measureDownloadSpeed(`${Server}/download_speed`)).toFixed(2),
+    );
+    let upload_speed = Number(
+      (
+        await RadioParameters.measureUploadSpeed(`${Server}/upload_speed`, _3mb)
+      ).toFixed(2),
+    );
+
+    let test = {
+      download_speed,
+      upload_speed,
+      latency,
+      timestamp: Date.now(),
+      netinfo: {...netinfo, ...isp},
+      location: location_info,
+    };
+
+    try {
+      await this.send_to_server(test);
+    } catch (e) {}
+  };
+
   background_process = () => {
     BackgroundFetch.configure(
       {
@@ -356,32 +394,7 @@ class Mins extends React.Component {
         startOnBoot: true, // start when the device boots up
       },
       async taskId => {
-        await this.refresh_network();
-        let {netinfo, isp} = this.state;
-
-        let latency = Number(
-          (
-            (await RadioParameters.measureLatency('mins.giitafrica.com')) * 1000
-          ).toFixed(2),
-        );
-        let download_speed = Number(
-          (await measureDownloadSpeed(`${Server}/download_speed`)).toFixed(2),
-        );
-        let upload_speed = Number(
-          (
-            await RadioParameters.measureUploadSpeed(
-              `${Server}/upload_speed`,
-              _3mb,
-            )
-          ).toFixed(2),
-        );
-
-        let test = {download_speed, upload_speed, latency, ...netinfo, ...isp};
-
-        try {
-          await this.send_to_server(test);
-        } catch (e) {}
-
+        await this.network_process();
         BackgroundFetch.finish(taskId); // signal task completion
       },
     );
@@ -424,11 +437,13 @@ class Mins extends React.Component {
                   superuser: !!superuser,
                   show_data: !!show_data,
                 },
-                async () =>
+                async () => {
                   await AsyncStorage.setItem(
                     'location',
                     JSON.stringify(this.state.location_info),
-                  ),
+                  );
+                  await this.network_process(true);
+                },
               );
             })
             .catch(async err => {
@@ -527,7 +542,7 @@ class Mins extends React.Component {
   };
 
   get_isp = n => {
-    return n.netinfo?.isp;
+    return as_to_name(n.netinfo);
   };
 
   get_net = test => {
@@ -549,10 +564,8 @@ class Mins extends React.Component {
   aggregate_network = async (test, bg) => {
     test.isp = this.get_isp(test);
     test.area = this.get_area(test);
-    console.log(test.isp, test.area, 'YOOOOOO');
 
     if (!test.isp || !test.area) return;
-
     if (
       !['airtel', 'mtn', '9mobile', 'glo'].includes(
         as_to_name(test)?.toLowerCase(),
@@ -572,6 +585,7 @@ class Mins extends React.Component {
       .then(res => {
         if (bg) return;
         let {networks} = this.state;
+
         networks = networks.map(n => {
           if (n.area === test.area && n.isp === test.isp) return res;
           return n;
@@ -681,7 +695,6 @@ class Mins extends React.Component {
   toggle_show_data = async () => {
     let {show_data} = this.state;
 
-    console.log(show_data);
     this.setState({show_data: !show_data});
 
     if (show_data) await AsyncStorage.removeItem('showdata');
