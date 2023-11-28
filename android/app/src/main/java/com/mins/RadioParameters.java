@@ -339,7 +339,7 @@ private WritableMap getCellInfoMap(CellInfo cellInfo) {
     } else if (cellInfo instanceof CellInfoWcdma) {
         return getWcdmaCellInfoMap((CellInfoWcdma) cellInfo);
     }else if (cellInfo instanceof CellInfoNr) {
-        return getNrCellInfoMap((CellInfoWcdma) cellInfo);
+        return getNrCellInfoMap((CellInfoNr) cellInfo);
     }
 
     return null;
@@ -363,7 +363,7 @@ private int getCellNetworkType(CellInfo cellInfo) {
     if (cellInfo instanceof CellInfoGsm) {
         return TelephonyManager.NETWORK_TYPE_GSM;
     } else if (cellInfo instanceof CellInfoNr) {
-        return TelephonyManager.NETWORK_TYPE_GSM;
+        return TelephonyManager.NETWORK_TYPE_NR;
     }else if (cellInfo instanceof CellInfoCdma) {
         return TelephonyManager.NETWORK_TYPE_CDMA;
     } else if (cellInfo instanceof CellInfoLte) {
@@ -379,38 +379,37 @@ private int getCellNetworkType(CellInfo cellInfo) {
 private WritableMap getNrCellInfoMap(CellInfo cellInfo) {
     WritableMap cellInfoMap = Arguments.createMap();
 
-    if (cellInfo instanceof CellInfoNr) {
-        CellInfoNr cellInfoNr = (CellInfoNr) cellInfo;
-        CellIdentity cellIdentity = cellInfoNr.getCellIdentity();
-        CellIdentityNr cellIdentityNr = (CellIdentityNr) cellIdentity;
+    CellInfoNr cellInfoNr = (CellInfoNr) cellInfo;
+    CellIdentity cellIdentity = cellInfoNr.getCellIdentity();
+    CellIdentityNr cellIdentityNr = (CellIdentityNr) cellIdentity;
 
-        cellInfoMap.putInt("nrarfcn", cellIdentityNr.getNrarfcn());
-        cellInfoMap.putDouble("nci", (double) cellIdentityNr.getNci());
-        cellInfoMap.putString("mcc", cellIdentityNr.getMccString());
-        cellInfoMap.putString("mnc", cellIdentityNr.getMncString());
-        cellInfoMap.putInt("cellNetworkType", TelephonyManager.NETWORK_TYPE_NR);
+    cellInfoMap.putInt("nrarfcn", cellIdentityNr.getNrarfcn());
+    cellInfoMap.putDouble("nci", (double) cellIdentityNr.getNci());
+    cellInfoMap.putString("mcc", cellIdentityNr.getMccString());
+    cellInfoMap.putString("mnc", cellIdentityNr.getMncString());
+    cellInfoMap.putInt("cellNetworkType", TelephonyManager.NETWORK_TYPE_NR);
 
-        CellSignalStrength signalStrength = cellInfoNr.getCellSignalStrength();
-        if (signalStrength instanceof CellSignalStrengthNr) {
-            CellSignalStrengthNr signalStrengthNr = (CellSignalStrengthNr) signalStrength;
-            // Now you can use signalStrengthNr to get NR-specific signal strength information
-            int ssRsrp = signalStrengthNr.getSsRsrp();
-            int ssRsrq = signalStrengthNr.getSsRsrq();
-            int ssSinr = signalStrengthNr.getSsSinr();
-            int dbm = signalStrengthNr.getDbm();
-            // Add these values to your WritableMap
-            cellInfoMap.putInt("ssRsrp", ssRsrp);
-            cellInfoMap.putInt("ssRsrq", ssRsrq);
-            cellInfoMap.putInt("ssSinr", ssSinr);
-            cellInfoMap.putInt("dBm", dbm);
-            cellInfoMap.putInt("signalStrengthLevel", signalStrengthNr.getLevel());
-        }
-
-        // NR-TAC (Tracking Area Code)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            // cellInfoMap.putInt("nrtac", cellIdentityNr.getTac());
-        }
+    CellSignalStrength signalStrength = cellInfoNr.getCellSignalStrength();
+    if (signalStrength instanceof CellSignalStrengthNr) {
+        CellSignalStrengthNr signalStrengthNr = (CellSignalStrengthNr) signalStrength;
+        // Now you can use signalStrengthNr to get NR-specific signal strength information
+        int ssRsrp = signalStrengthNr.getSsRsrp();
+        int ssRsrq = signalStrengthNr.getSsRsrq();
+        int ssSinr = signalStrengthNr.getSsSinr();
+        int dbm = signalStrengthNr.getDbm();
+        // Add these values to your WritableMap
+        cellInfoMap.putInt("ssRsrp", ssRsrp);
+        cellInfoMap.putInt("ssRsrq", ssRsrq);
+        cellInfoMap.putInt("ssSinr", ssSinr);
+        cellInfoMap.putInt("dBm", dbm);
+        cellInfoMap.putInt("signalStrengthLevel", signalStrengthNr.getLevel());
     }
+
+    // NR-TAC (Tracking Area Code)
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        // cellInfoMap.putInt("nrtac", cellIdentityNr.getTac());
+    }
+    
 
     return cellInfoMap;
 }
