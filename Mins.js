@@ -32,7 +32,7 @@ const {RadioParameters} = NativeModules;
 
 const Server = false
   ? 'http://192.168.43.11:3700'
-  : 'http://mins.giitafrica.com';
+  : 'https://mins.lytxstreamlabs.com';
 
 const emitter = new Emitter();
 
@@ -354,7 +354,7 @@ class Mins extends React.Component {
 
     let latency = Number(
       (
-        (await RadioParameters.measureLatency('mins.giitafrica.com')) * 1000
+        (await RadioParameters.measureLatency('mins.lytxstreamlabs.com')) * 1000
       ).toFixed(2),
     );
     let download_speed = Number(

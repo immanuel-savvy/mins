@@ -64,8 +64,9 @@ class Speed_stats extends React.Component {
           latency =
             Number(
               (
-                (await RadioParameters.measureLatency('mins.giitafrica.com')) *
-                1000
+                (await RadioParameters.measureLatency(
+                  'mins.lytxstreamlabs.com',
+                )) * 1000
               ).toFixed(2),
             ) || 0;
 
@@ -77,7 +78,7 @@ class Speed_stats extends React.Component {
         }
 
         try {
-          const url = 'http://mins.giitafrica.com/download_speed';
+          const url = `${Server}/download_speed`;
           download_speed = Number((await measureDownloadSpeed(url)).toFixed(2));
 
           traffic_stats.download_speed = download_speed || 0;
